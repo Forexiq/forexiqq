@@ -715,7 +715,7 @@ async function callAI(messages,onDone){
     const langNote=langMap[lang]||'';
     const system='You are ForexIQ AI, an expert forex trading assistant. Analyze news impact on forex pairs (EUR/USD, GBP/USD, USD/JPY, XAU/USD, DXY, AUD/USD). Give pip targets, key levels, direction bias. Always reply in the same language the user writes in. '+(langNote?langNote:'');
     const geminiContents=messages.filter(m=>['user','assistant'].includes(m.role)&&typeof m.content==='string').slice(-20).map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
-    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyAf5HYv78O6J4seiZ_V41tDWy5aNE9aUIs',{
+    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-002:generateContent?key=AIzaSyAf5HYv78O6J4seiZ_V41tDWy5aNE9aUIs',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({system_instruction:{parts:[{text:system}]},contents:geminiContents,generationConfig:{maxOutputTokens:1000,temperature:0.7}})
