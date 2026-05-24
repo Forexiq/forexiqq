@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
     if (!geminiContents.length) return res.status(400).json({ error: 'No valid messages' })
 
     const geminiRes = await fetch(
-      `generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
+      `generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
