@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForexIQ — Intelligence Platform</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+:root{--bg0:#060810;--bg1:#0a0d12;--bg2:#0d1117;--bg3:#111827;--accent:#38bdf8;--accent2:#7dd3fc;--text1:#e2e8f0;--text2:#94a3b8;--text3:#6b7280;--text4:#4b5563;--up:#4ade80;--dn:#f87171;--warn:#fbbf24;--border:#1e2530;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:13px;overflow:hidden;}
+
+/* AUTH SCREENS */
+.auth-screen{position:fixed;inset:0;background:var(--bg0);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:0;}
+.auth-screen.hidden{display:none;}
+.auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:36px 40px;width:400px;max-width:95vw;}
+.auth-logo{font-size:24px;font-weight:700;color:var(--accent);text-align:center;margin-bottom:4px;letter-spacing:-0.5px;}
+.auth-logo span{color:var(--accent2);}
+.auth-sub{font-size:11px;color:var(--text4);text-align:center;margin-bottom:28px;}
+.auth-tabs{display:flex;background:var(--bg3);border-radius:8px;padding:3px;margin-bottom:24px;gap:3px;}
+.auth-tab{flex:1;padding:7px;border:none;border-radius:6px;background:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s;}
+.auth-tab.on{background:var(--bg2);color:var(--text1);}
+.auth-field{margin-bottom:14px;}
+.auth-field label{display:block;font-size:11px;color:var(--text3);margin-bottom:5px;font-weight:500;}
+.auth-field input,.auth-field select{width:100%;background:var(--bg1);border:1px solid var(--border);border-radius:7px;color:var(--text1);padding:10px 13px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;}
+.auth-field input:focus,.auth-field select:focus{border-color:var(--accent);}
+.auth-btn{width:100%;padding:11px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .15s;}
+.auth-btn-primary{background:var(--accent);color:#060810;}
+.auth-btn-primary:hover{background:var(--accent2);}
+.auth-admin-badge{background:#2a0f0f;border:1px solid #99000055;border-radius:6px;padding:8px 12px;font-size:11px;color:var(--dn);margin-bottom:16px;display:flex;align-items:center;gap:6px;}
+.auth-link{text-align:center;font-size:11px;color:var(--text4);margin-top:16px;}
+.auth-link a{color:var(--accent);cursor:pointer;text-decoration:none;}
+.auth-error{background:#2a0f0f;border:1px solid #99000055;border-radius:6px;padding:8px 12px;font-size:11px;color:var(--dn);margin-bottom:12px;display:none;}
+
+/* APP */
+.app{display:grid;grid-template-rows:48px 32px 1fr;height:100vh;}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:10px;flex-shrink:0;}
+.ticker-bar{background:#080b10;border-bottom:1px solid var(--border);overflow:hidden;white-space:nowrap;display:flex;align-items:center;}
+.ticker-inner{display:inline-flex;gap:24px;padding:0 20px;animation:tickscroll 50s linear infinite;}
+@keyframes tickscroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.tick-item{display:inline-flex;align-items:center;gap:5px;font-size:11px;}
+.tick-pair{color:var(--text3);font-weight:600;}
+.tick-price{color:var(--text1);font-weight:500;}
+.body{display:grid;grid-template-columns:200px 1fr 340px;overflow:hidden;}
+.logo{font-size:17px;font-weight:700;color:var(--accent);letter-spacing:-0.5px;white-space:nowrap;cursor:pointer;transition:opacity .15s;user-select:none;}
+.logo:hover{opacity:.8;}
+.logo span{color:var(--accent2);}
+.logo small{font-size:10px;color:var(--text4);font-weight:400;margin-left:6px;}
+.nav{display:flex;gap:2px;}
+.nbtn{background:none;border:none;color:var(--text4);padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.nbtn.on{background:#1e2d3d;color:var(--accent);}
+.nbtn:hover:not(.on){color:var(--text2);background:var(--bg3);}
+.live-badge{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text4);white-space:nowrap;}
+.live-dot{width:6px;height:6px;background:#ef4444;border-radius:50%;animation:blink 1.2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.user-btn{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 10px;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.user-btn:hover{border-color:var(--accent);}
+.user-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
+
+/* SIDEBAR */
+.sidebar-left{background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;}
+.sl-section{padding:10px;border-bottom:1px solid var(--border);}
+.sl-title{font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px;}
+.cat-btn{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .12s;margin-bottom:2px;}
+.cat-btn:hover{background:var(--bg3);}
+.cat-btn.on{background:#1e2d3d;}
+.cat-btn-name{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;}
+.cat-btn.on .cat-btn-name{color:var(--accent);}
+.cat-count{font-size:10px;color:var(--text4);background:var(--bg3);padding:1px 6px;border-radius:8px;}
+.pair-item{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:5px;margin-bottom:2px;}
+.pair-name{font-size:11px;font-weight:600;color:var(--text2);}
+
+/* VIEWS */
+.view{display:none;flex:1;overflow:hidden;}
+.view.on{display:flex;flex-direction:column;overflow:hidden;}
+.view-inner{flex:1;overflow-y:auto;}
+.view-hdr{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg1);}
+
+/* NEWS */
+.filter-bar{display:flex;gap:5px;padding:10px 14px;border-bottom:1px solid var(--border);align-items:center;flex-wrap:wrap;flex-shrink:0;background:var(--bg1);}
+.fbtn{background:none;border:1px solid var(--border);border-radius:5px;color:var(--text4);padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;}
+.fbtn.on{background:#1e2d3d;border-color:var(--accent);color:var(--accent);}
+.fbtn:hover:not(.on){border-color:#374151;color:var(--text2);}
+.refresh-btn{margin-left:auto;background:none;border:1px solid var(--border);border-radius:5px;color:var(--text4);padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit;}
+.refresh-btn:hover{color:var(--accent);border-color:var(--accent);}
+.news-item{border-bottom:1px solid var(--border);padding:12px 14px;cursor:pointer;transition:background .12s;}
+.news-item:hover{background:#0d1420;}
+.news-item.active{background:#0a1525;border-left:2px solid var(--accent);}
+.ni-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.ni-src{font-size:10px;color:var(--accent);font-weight:600;}
+.ni-time{font-size:10px;color:var(--text4);margin-left:auto;}
+.ni-title{font-size:13px;font-weight:600;color:var(--text1);line-height:1.4;margin-bottom:5px;}
+.ni-body{font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:7px;}
+.ni-tags{display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
+.imp-pill{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.imp-h{background:#2a0f0f;color:var(--dn);border:1px solid #99000055;}
+.imp-m{background:#2d2418;color:var(--warn);border:1px solid #92400e55;}
+.imp-l{background:#0f2a1a;color:var(--up);border:1px solid #16653455;}
+.pair-tag{background:var(--bg3);border:1px solid var(--border);border-radius:4px;font-size:10px;color:var(--text2);padding:1px 6px;font-weight:500;}
+.cat-tag{background:#1a1f2e;border:1px solid var(--border);border-radius:4px;font-size:10px;color:#818cf8;padding:1px 6px;}
+
+/* CALENDAR */
+.day-tab{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text4);font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center;min-width:52px;}
+.day-tab.on{background:#1e2d3d;border-color:var(--accent);color:var(--accent);}
+.day-tab.today{border-color:var(--warn);color:var(--warn);}
+.day-tab.today.on{background:#2d2418;border-color:var(--warn);color:var(--warn);}
+.day-tab:hover:not(.on){border-color:#374151;color:var(--text2);}
+.cal-row{display:grid;grid-template-columns:58px 10px 1fr 82px;gap:8px;align-items:center;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;cursor:pointer;transition:border-color .12s;}
+.cal-row:hover{border-color:var(--accent);}
+.cal-time{font-size:10px;color:var(--text3);}
+.imp-dot{width:8px;height:8px;border-radius:50%;}
+.idh{background:#ef4444;}.idm{background:#f59e0b;}.idl{background:#22c55e;}
+.cal-pred{font-size:10px;padding:2px 8px;border-radius:4px;text-align:center;font-weight:500;}
+.pred-b{background:#0f2a1a;color:var(--up);}
+.pred-r{background:#2a0f0f;color:var(--dn);}
+.pred-n{background:#1a1a2a;color:var(--text2);}
+
+/* FORUM */
+.forum-thread{border-bottom:1px solid var(--border);padding:12px 14px;cursor:pointer;transition:background .12s;}
+.forum-thread:hover{background:#0d1420;}
+.tag-pill{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.t-analysis{background:#0f1a2a;color:#60a5fa;border:1px solid #1d4ed855;}
+.t-signal{background:#0f2a1a;color:var(--up);border:1px solid #16653455;}
+.t-debate{background:#2a1515;color:var(--dn);border:1px solid #99000055;}
+.t-news{background:#2d2418;color:var(--warn);border:1px solid #92400e55;}
+.compose-bar{background:var(--bg3);border-bottom:1px solid var(--border);padding:12px 14px;display:none;flex-shrink:0;}
+.compose-bar.on{display:block;}
+.c-inp{width:100%;background:var(--bg1);border:1px solid var(--border);border-radius:6px;color:var(--text1);padding:8px 11px;font-size:12px;font-family:inherit;outline:none;margin-bottom:7px;}
+.c-inp:focus{border-color:var(--accent);}
+
+/* ROLES */
+.role-b{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:600;}
+.r-elite{background:#2d1e15;color:#fb923c;border:1px solid #c2410c55;}
+.r-diamond{background:#2d1d2d;color:#c084fc;border:1px solid #7e22ce55;}
+.r-gold{background:#2d2418;color:#fbbf24;border:1px solid #92400e55;}
+.r-silver{background:#1e2a3d;color:#60a5fa;border:1px solid #1d4ed855;}
+.r-bronze{background:#1a2e1a;color:#4ade80;border:1px solid #16653455;}
+.r-verified{background:#1a1f2e;color:#818cf8;border:1px solid #4338ca55;}
+.r-standard{background:#1e293b;color:#64748b;}
+
+/* LEADERBOARD */
+.lb-row{display:grid;grid-template-columns:28px 32px 1fr 90px 70px;gap:8px;align-items:center;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;transition:border-color .12s;cursor:pointer;}
+.lb-row:hover{border-color:var(--accent);}
+.lb-row.t1{border-color:#fb923c55;background:#120d09;}
+.lb-row.t2{border-color:#c084fc44;background:#110c14;}
+.lb-row.t3{border-color:#fbbf2444;background:#11100a;}
+.ptab{padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--text4);font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.ptab.on{background:#1e2d3d;border-color:var(--accent);color:var(--accent);}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;}
+
+/* AFFILIATES */
+.firm-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:8px;}
+.code-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.code-val{font-size:14px;font-weight:700;color:var(--accent);letter-spacing:1.5px;}
+.copy-btn{background:none;border:1px solid var(--border);border-radius:5px;color:var(--text3);padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ADMIN */
+.ban-row{display:grid;grid-template-columns:28px 1fr 80px 70px 70px;gap:8px;align-items:center;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;}
+.abtn{padding:4px 9px;border-radius:5px;font-size:11px;cursor:pointer;font-family:inherit;border:none;font-weight:600;}
+.abtn-ban{background:#2a0f0f;color:var(--dn);border:1px solid #99000055;}
+.abtn-warn{background:#2d2418;color:var(--warn);border:1px solid #92400e55;}
+.abtn-lift{background:#0f2a1a;color:var(--up);border:1px solid #16653455;}
+.sbadge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.sb-ok{background:#0f2a1a;color:var(--up);border:1px solid #16653455;}
+.sb-warn{background:#2d2418;color:var(--warn);border:1px solid #92400e55;}
+.sb-err{background:#2a0f0f;color:var(--dn);border:1px solid #99000055;}
+
+/* AI PANEL */
+.ai-panel{display:flex;flex-direction:column;height:100%;background:var(--bg2);border-left:1px solid var(--border);}
+.ai-hdr{padding:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.ai-icon{width:30px;height:30px;background:#1e2d3d;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:15px;flex-shrink:0;}
+.chat-area{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;}
+.msg-ai{background:var(--bg3);border:1px solid var(--border);border-radius:8px 8px 8px 2px;padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.65;}
+.msg-ai .lbl{font-size:9px;color:var(--accent);font-weight:700;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+.msg-user{background:#1e2d3d;border-radius:8px 8px 2px 8px;padding:9px 12px;font-size:11px;color:#bfdbfe;align-self:flex-end;max-width:92%;}
+.dots span{animation:dp 1.2s infinite;opacity:0;}
+.dots span:nth-child(2){animation-delay:.2s;}
+.dots span:nth-child(3){animation-delay:.4s;}
+@keyframes dp{0%,100%{opacity:0}50%{opacity:1}}
+.ai-qbtns{display:flex;flex-direction:column;gap:4px;padding:0 12px 8px;flex-shrink:0;}
+.qbtn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text3);padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit;text-align:left;transition:all .15s;}
+.qbtn:hover{border-color:var(--accent);color:var(--accent);}
+.ai-input-row{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;}
+.ai-inp{flex:1;background:var(--bg1);border:1px solid var(--border);border-radius:7px;color:var(--text1);padding:8px 12px;font-size:12px;font-family:inherit;outline:none;}
+.ai-inp:focus{border-color:var(--accent);}
+.ai-send{background:var(--accent);border:none;border-radius:7px;color:#060810;padding:8px 13px;font-size:14px;cursor:pointer;}
+.ai-send:hover{background:var(--accent2);}
+.lang-sel{background:var(--bg1);border:1px solid var(--border);border-radius:5px;color:var(--text2);padding:4px 8px;font-size:11px;font-family:inherit;outline:none;margin-left:auto;cursor:pointer;}
+
+/* PROFILE MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:center;justify-content:center;}
+.modal-overlay.hidden{display:none;}
+.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;width:420px;max-width:95vw;overflow:hidden;}
+.modal-header{background:var(--bg3);padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0;line-height:1;}
+.modal-close:hover{color:var(--text1);}
+.modal-body{padding:20px 24px;}
+.profile-av-lg{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;flex-shrink:0;}
+.profile-stat{background:var(--bg3);border-radius:8px;padding:10px 14px;text-align:center;}
+.profile-stat-val{font-size:18px;font-weight:700;color:var(--text1);}
+.profile-stat-lbl{font-size:10px;color:var(--text4);margin-top:2px;}
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:16px 0;}
+.post-mini{background:var(--bg3);border-radius:6px;padding:8px 10px;margin-bottom:5px;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px;}
+.stat-card{background:var(--bg3);border-radius:7px;padding:10px 12px;}
+.stat-val{font-size:18px;font-weight:700;color:var(--text1);}
+.stat-lbl{font-size:10px;color:var(--text4);margin-top:2px;}
+.stat-sub{font-size:10px;margin-top:2px;}
+.card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;}
+.card-title{font-size:12px;font-weight:600;color:var(--text1);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.up{color:var(--up);}.dn{color:var(--dn);}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#1e2530;border-radius:3px;}
+@media(max-width:768px){.body{grid-template-columns:1fr;}.sidebar-left,.ai-panel{display:none;}.stats-grid{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+
+<!-- ===== AUTH: USER REGISTER ===== -->
+<div class="auth-screen" id="screen-user-register">
+  <div class="auth-box">
+    <div class="auth-logo">Forex<span>IQ</span></div>
+    <div class="auth-sub">Create your trader account</div>
+    <div class="auth-tabs">
+      <button class="auth-tab on" onclick="authTab('register','user')">Sign up</button>
+      <button class="auth-tab" onclick="authTab('login','user')">Log in</button>
+    </div>
+    <div id="auth-error-user" class="auth-error"><i class="ti ti-alert-circle"></i> <span id="auth-error-user-msg"></span></div>
+    <div id="auth-register-user">
+      <div class="auth-field"><label>Full name</label><input id="reg-name" type="text" placeholder="e.g. Marco Keller" /></div>
+      <div class="auth-field"><label>Username</label><input id="reg-username" type="text" placeholder="e.g. @mkeller_fx" /></div>
+      <div class="auth-field"><label>Email</label><input id="reg-email" type="email" placeholder="you@example.com" /></div>
+      <div class="auth-field"><label>Password</label><input id="reg-pass" type="password" placeholder="Min. 8 characters" /></div>
+      <div class="auth-field"><label>Country</label>
+        <select id="reg-country">
+          <option value="">Select country...</option>
+          <option>Spain</option><option>United States</option><option>United Kingdom</option>
+          <option>Germany</option><option>France</option><option>Italy</option><option>Portugal</option>
+          <option>Mexico</option><option>Argentina</option><option>Colombia</option><option>Brazil</option>
+          <option>Australia</option><option>Japan</option><option>UAE</option><option>Other</option>
+        </select>
+      </div>
+      <button class="auth-btn auth-btn-primary" onclick="doRegister()">Create account</button>
+    </div>
+    <div id="auth-login-user" style="display:none">
+      <div class="auth-field"><label>Email</label><input id="login-email" type="email" placeholder="you@example.com" /></div>
+      <div class="auth-field"><label>Password</label><input id="login-pass" type="password" placeholder="Your password" /></div>
+      <button class="auth-btn auth-btn-primary" onclick="doLogin()">Log in</button>
+    </div>
+    <div class="auth-link">Admin? <a onclick="showScreen('admin-login')">Admin login &rarr;</a></div>
+  </div>
+</div>
+
+<!-- ===== AUTH: ADMIN LOGIN ===== -->
+<div class="auth-screen hidden" id="screen-admin-login">
+  <div class="auth-box">
+    <div class="auth-logo">Forex<span>IQ</span></div>
+    <div class="auth-sub">Admin access</div>
+    <div class="auth-admin-badge"><i class="ti ti-shield-lock"></i> This portal is restricted to authorized administrators only.</div>
+    <div id="auth-error-admin" class="auth-error"><i class="ti ti-alert-circle"></i> <span id="auth-error-admin-msg"></span></div>
+    <div class="auth-field"><label>Admin email</label><input id="admin-email" type="email" placeholder="admin@forexiq.com" /></div>
+    <div class="auth-field"><label>Admin password</label><input id="admin-pass" type="password" placeholder="Admin password" /></div>
+    <div class="auth-field"><label>Admin key</label><input id="admin-key" type="password" placeholder="Secret admin key" /></div>
+    <button class="auth-btn auth-btn-primary" onclick="doAdminLogin()">Access admin panel</button>
+    <div class="auth-link"><a onclick="showScreen('user-register')">← Back to user login</a></div>
+  </div>
+</div>
+
+<!-- ===== PROFILE MODAL ===== -->
+<div class="modal-overlay hidden" id="profile-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div style="font-size:13px;font-weight:600;color:var(--text1)">Trader profile</div>
+      <button class="modal-close" onclick="closeProfile()">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+        <div class="profile-av-lg" id="prf-av" style="background:#2d1e15;color:#fb923c">MK</div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--text1)" id="prf-name">Marco Keller</div>
+          <div style="font-size:12px;color:var(--text3)" id="prf-handle">@mkeller_fx</div>
+          <div style="margin-top:5px" id="prf-role"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px"><i class="ti ti-map-pin" style="font-size:12px"></i> <span id="prf-country">Spain</span></span>
+        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px"><i class="ti ti-calendar" style="font-size:12px"></i> Member since <span id="prf-since">Jan 2024</span></span>
+        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px"><i class="ti ti-clock" style="font-size:12px"></i> <span id="prf-tenure"></span></span>
+      </div>
+      <div class="stat-row">
+        <div class="profile-stat"><div class="profile-stat-val up" id="prf-payout">$612K</div><div class="profile-stat-lbl">Total payout</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" id="prf-posts">47</div><div class="profile-stat-lbl">Forum posts</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" id="prf-likes">1.2K</div><div class="profile-stat-lbl">Likes received</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--text4);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Recent posts</div>
+      <div id="prf-posts-list"></div>
+      <div id="prf-verified-badge" style="margin-top:12px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div class="app" id="main-app" style="display:none">
+  <div class="header">
+    <div class="logo" onclick="goHome()" title="Go to home">Forex<span>IQ</span><small>Intelligence Platform</small></div>
+    <div class="nav">
+      <button class="nbtn on" onclick="setView('news',this)" id="nav-news"><i class="ti ti-news"></i> News</button>
+      <button class="nbtn" onclick="setView('calendar',this)" id="nav-calendar"><i class="ti ti-calendar"></i> Calendar</button>
+      <button class="nbtn" onclick="setView('forum',this)" id="nav-forum"><i class="ti ti-messages"></i> Forum</button>
+      <button class="nbtn" onclick="setView('leaderboard',this)" id="nav-lb"><i class="ti ti-trophy"></i> Leaderboard</button>
+      <button class="nbtn" onclick="setView('affiliates',this)" id="nav-aff"><i class="ti ti-affiliate"></i> Partners</button>
+      <button class="nbtn" onclick="setView('admin',this)" id="nav-admin" style="display:none"><i class="ti ti-shield-lock"></i> Admin</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="live-badge"><span class="live-dot"></span><span id="clock">--:--</span> UTC · <span id="today-label" style="color:var(--warn)"></span></div>
+      <div class="user-btn" onclick="openProfile(currentUser)" id="user-btn-hdr">
+        <div class="user-av" id="user-av-hdr" style="background:#1e2d3d;color:var(--accent);width:24px;height:24px;font-size:9px">?</div>
+        <span style="font-size:11px;color:var(--text2)" id="user-name-hdr">Loading...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ticker-bar">
+    <div class="ticker-inner" id="ticker"><span style="color:var(--text4);font-size:11px;padding:0 12px">Loading live prices...</span></div>
+  </div>
+
+  <div class="body">
+    <!-- SIDEBAR LEFT -->
+    <div class="sidebar-left">
+      <div class="sl-section">
+        <div class="sl-title">News filters</div>
+        <div class="cat-btn on" onclick="filterNews('all',this)" id="f-all"><span class="cat-btn-name"><i class="ti ti-list"></i> All news</span><span class="cat-count" id="cnt-all">0</span></div>
+        <div class="cat-btn" onclick="filterNews('high',this)" id="f-high"><span class="cat-btn-name"><i class="ti ti-alert-triangle" style="color:var(--dn)"></i> High impact</span><span class="cat-count" id="cnt-high">0</span></div>
+        <div class="cat-btn" onclick="filterNews('cbk',this)" id="f-cbk"><span class="cat-btn-name"><i class="ti ti-building-bank"></i> Central banks</span><span class="cat-count" id="cnt-cbk">0</span></div>
+        <div class="cat-btn" onclick="filterNews('macro',this)" id="f-macro"><span class="cat-btn-name"><i class="ti ti-chart-bar"></i> Macro data</span><span class="cat-count" id="cnt-macro">0</span></div>
+        <div class="cat-btn" onclick="filterNews('geo',this)" id="f-geo"><span class="cat-btn-name"><i class="ti ti-world"></i> Geopolitical</span><span class="cat-count" id="cnt-geo">0</span></div>
+        <div class="cat-btn" onclick="filterNews('trade',this)" id="f-trade"><span class="cat-btn-name"><i class="ti ti-arrows-exchange"></i> Trade & tariffs</span><span class="cat-count" id="cnt-trade">0</span></div>
+      </div>
+      <div class="sl-section" style="flex:1">
+        <div class="sl-title">Live prices</div>
+        <div id="mini-prices"></div>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div style="overflow:hidden;display:flex;flex-direction:column;">
+
+      <!-- NEWS -->
+      <div class="view on" id="view-news">
+        <div class="filter-bar">
+          <button class="fbtn on" onclick="filterNews('all',this)">All</button>
+          <button class="fbtn" onclick="filterNews('high',this)">High impact</button>
+          <button class="fbtn" onclick="filterNews('cbk',this)">Central banks</button>
+          <button class="fbtn" onclick="filterNews('macro',this)">NFP · CPI · GDP</button>
+          <button class="fbtn" onclick="filterNews('geo',this)">Geopolitical</button>
+          <button class="fbtn" onclick="filterNews('trade',this)">Trade</button>
+          <button class="refresh-btn" onclick="loadNews()"><i class="ti ti-refresh"></i> Refresh</button>
+        </div>
+        <div class="view-inner" id="news-feed">
+          <div style="padding:30px;text-align:center;color:var(--text4)"><i class="ti ti-loader" style="font-size:20px;display:block;margin-bottom:8px"></i>Fetching live news...</div>
+        </div>
+      </div>
+
+      <!-- CALENDAR -->
+      <div class="view" id="view-calendar">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg1);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text1)">Economic calendar</div>
+              <div style="font-size:10px;color:var(--text4)" id="cal-week-label">Loading...</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button onclick="calChangeWeek(-1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text2);padding:4px 9px;font-size:13px;cursor:pointer;font-family:inherit;">&#8249;</button>
+              <span id="cal-week-range" style="font-size:11px;color:var(--text3);white-space:nowrap;min-width:140px;text-align:center;"></span>
+              <button onclick="calChangeWeek(1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text2);padding:4px 9px;font-size:13px;cursor:pointer;font-family:inherit;">&#8250;</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;" id="cal-day-tabs"></div>
+        </div>
+        <div class="view-inner" style="padding:12px 14px;">
+          <div id="cal-rows"></div>
+          <div id="cal-detail" style="display:none;background:#0f1a2a;border:1px solid #1d4ed855;border-radius:8px;padding:12px;margin-top:8px;">
+            <div style="font-size:10px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;"><i class="ti ti-sparkles" style="font-size:10px;"></i> AI prediction — <span id="cal-name"></span></div>
+            <div id="cal-pred-text" style="font-size:12px;color:#93c5fd;line-height:1.7;margin-bottom:10px;"></div>
+            <div style="display:flex;gap:10px;">
+              <div style="flex:1"><div style="font-size:9px;color:var(--up);margin-bottom:3px;">Bullish <span id="bp"></span></div><div style="height:4px;background:var(--border);border-radius:2px;"><div id="bb" style="height:4px;border-radius:2px;background:#22c55e;transition:width .4s;"></div></div></div>
+              <div style="flex:1"><div style="font-size:9px;color:var(--dn);margin-bottom:3px;">Bearish <span id="rp"></span></div><div style="height:4px;background:var(--border);border-radius:2px;"><div id="rb" style="height:4px;border-radius:2px;background:#ef4444;transition:width .4s;"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORUM -->
+      <div class="view" id="view-forum">
+        <div class="view-hdr">
+          <div style="font-size:13px;font-weight:600;color:var(--text1);">Community Forum</div>
+          <button onclick="document.getElementById('compose-bar').classList.toggle('on')" style="background:var(--accent);border:none;border-radius:6px;color:#060810;padding:6px 14px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;"><i class="ti ti-plus" style="font-size:11px;"></i> New post</button>
+        </div>
+        <div class="compose-bar" id="compose-bar">
+          <input class="c-inp" id="post-title" placeholder="Post title..." />
+          <textarea class="c-inp" id="post-body" placeholder="Share your analysis, signal or opinion..." style="min-height:65px;resize:vertical;"></textarea>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select class="c-inp" id="post-tag" style="margin:0;flex:0 0 140px;">
+              <option value="t-analysis">Analysis</option><option value="t-signal">Signal</option>
+              <option value="t-debate">Debate</option><option value="t-news">News</option>
+            </select>
+            <button onclick="submitPost()" style="background:var(--accent);border:none;border-radius:6px;color:#060810;padding:7px 18px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Publish</button>
+            <button onclick="document.getElementById('compose-bar').classList.remove('on')" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text4);padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit;">Cancel</button>
+          </div>
+        </div>
+        <div class="view-inner" id="forum-feed"></div>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <div class="view" id="view-leaderboard">
+        <div class="view-hdr">
+          <div style="font-size:13px;font-weight:600;color:var(--text1);">Payout Leaderboard</div>
+          <div style="display:flex;gap:5px;">
+            <button class="ptab on" onclick="setPeriod('lifetime',this)">Lifetime</button>
+            <button class="ptab" onclick="setPeriod('monthly',this)">Monthly</button>
+            <button class="ptab" onclick="setPeriod('weekly',this)">Weekly</button>
+          </div>
+        </div>
+        <div class="view-inner" style="padding:14px;">
+          <div style="font-size:10px;color:var(--text4);margin-bottom:10px;" id="lb-label">All-time certified payouts</div>
+          <div id="lb-rows"></div>
+          <div class="stats-grid" style="padding:0;margin-top:14px;">
+            <div class="stat-card"><div class="stat-val">$2.1M</div><div class="stat-lbl">Total verified</div><div class="stat-sub up">+12% this month</div></div>
+            <div class="stat-card"><div class="stat-val">847</div><div class="stat-lbl">Active traders</div><div class="stat-sub up">+34 this week</div></div>
+            <div class="stat-card"><div class="stat-val">$318K</div><div class="stat-lbl">Payouts this month</div><div class="stat-sub" style="color:var(--text4);">23 certified</div></div>
+            <div class="stat-card"><div class="stat-val">7</div><div class="stat-lbl">Role tiers</div><div class="stat-sub" style="color:#818cf8;">Verified only</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AFFILIATES -->
+      <div class="view" id="view-affiliates">
+        <div class="view-hdr">
+          <div style="font-size:13px;font-weight:600;color:var(--text1);">Prop firm partners</div>
+          <div style="font-size:10px;color:var(--text4);">Exclusive discount codes for ForexIQ community</div>
+        </div>
+        <div class="view-inner" style="padding:14px;">
+          <div class="stats-grid" style="padding:0;margin-bottom:14px;">
+            <div class="stat-card"><div class="stat-val" style="color:var(--up);">$5,676</div><div class="stat-lbl">Total commissions</div><div class="stat-sub up">+18% this month</div></div>
+            <div class="stat-card"><div class="stat-val">2,130</div><div class="stat-lbl">Total clicks</div></div>
+            <div class="stat-card"><div class="stat-val">148</div><div class="stat-lbl">Challenges sold</div></div>
+            <div class="stat-card"><div class="stat-val">$38</div><div class="stat-lbl">Avg commission</div></div>
+          </div>
+          <div id="firm-cards"></div>
+        </div>
+      </div>
+
+      <!-- ADMIN -->
+      <div class="view" id="view-admin">
+        <div class="view-hdr">
+          <div><div style="font-size:13px;font-weight:600;color:var(--text1);">Admin panel</div><div style="font-size:10px;color:var(--text4);">All actions logged. Admin access only.</div></div>
+          <span class="sbadge sb-ok"><i class="ti ti-shield-lock" style="font-size:11px;"></i> Admin</span>
+        </div>
+        <div class="view-inner" style="padding:14px;">
+          <div class="card">
+            <div class="card-title"><i class="ti ti-ban" style="color:var(--dn);"></i> Ban a user</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 110px 100px;gap:8px;margin-bottom:8px;">
+              <input id="ban-user" style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;color:var(--text1);padding:7px 10px;font-size:12px;font-family:inherit;outline:none;" placeholder="@username or ID..." />
+              <select id="ban-reason" style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;color:var(--text2);padding:7px 10px;font-size:12px;font-family:inherit;outline:none;">
+                <option>Spam / flooding</option><option>Fake payout / fraud</option><option>Harassment</option>
+                <option>Unauthorized ads</option><option>Impersonation</option><option>Market manipulation</option><option>Other</option>
+              </select>
+              <select id="ban-dur" style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;color:var(--text2);padding:7px 10px;font-size:12px;font-family:inherit;outline:none;">
+                <option value="24h">24 hours</option><option value="7d">7 days</option><option value="30d">30 days</option><option value="perm">Permanent</option>
+              </select>
+              <button onclick="doBan()" style="background:#2a0f0f;border:1px solid #99000055;border-radius:6px;color:var(--dn);padding:7px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Execute ban</button>
+            </div>
+          </div>
+          <div class="card"><div class="card-title"><i class="ti ti-list" style="color:var(--warn);"></i> Active bans</div><div id="ban-list"></div></div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-robot" style="color:var(--accent);"></i> Antispam — active rules</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px;color:var(--text3);line-height:2;">
+              <div><i class="ti ti-check" style="color:var(--up);font-size:12px;margin-right:5px;"></i>Post cooldown 3 min / 30 sec (verified+)</div>
+              <div><i class="ti ti-check" style="color:var(--up);font-size:12px;margin-right:5px;"></i>External link blocker (whitelist only)</div>
+              <div><i class="ti ti-check" style="color:var(--up);font-size:12px;margin-right:5px;"></i>Duplicate content detector</div>
+              <div><i class="ti ti-check" style="color:var(--up);font-size:12px;margin-right:5px;"></i>Max 3 @mentions per post</div>
+              <div><i class="ti ti-check" style="color:var(--up);font-size:12px;margin-right:5px;"></i>Auto-suspend after 5 reports</div>
+              <div><i class="ti ti-check" style="color:var(--up);font-size:12px;margin-right:5px;"></i>AI fraud detection on payout docs</div>
+              <div><i class="ti ti-check" style="color:var(--up);font-size:12px;margin-right:5px;"></i>Login anomaly alerts (new IP/country)</div>
+              <div><i class="ti ti-check" style="color:var(--up);font-size:12px;margin-right:5px;"></i>Immutable audit log</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-users" style="color:var(--accent);"></i> Registered users</div>
+            <div id="admin-users-list"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end center -->
+
+    <!-- AI PANEL -->
+    <div class="ai-panel">
+      <div class="ai-hdr">
+        <div class="ai-icon"><i class="ti ti-sparkles"></i></div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--text1);">ForexIQ AI</div><div style="font-size:10px;color:var(--text4);">Replies in any language</div></div>
+        <select class="lang-sel" id="lang-sel" onchange="curLang=this.value">
+          <option value="en">EN</option><option value="es">ES</option><option value="fr">FR</option>
+          <option value="de">DE</option><option value="pt">PT</option><option value="it">IT</option>
+          <option value="zh">ZH</option><option value="ar">AR</option><option value="ja">JA</option>
+          <option value="ru">RU</option><option value="ko">KO</option><option value="tr">TR</option>
+        </select>
+      </div>
+      <div class="chat-area" id="chat-msgs">
+        <div class="msg-ai"><div class="lbl"><i class="ti ti-sparkles" style="font-size:9px;"></i> ForexIQ AI</div>Hello! I analyze live forex news, predict market impact, and answer in any language. Click any news item or ask me anything.</div>
+      </div>
+      <div class="ai-qbtns">
+        <button class="qbtn" onclick="quickQ('What are the most important forex events today and which pairs should I watch?')"><i class="ti ti-star" style="font-size:11px;margin-right:4px;"></i>Top events & pairs today</button>
+        <button class="qbtn" onclick="quickQ('Is market sentiment risk-on or risk-off right now?')"><i class="ti ti-chart-bar" style="font-size:11px;margin-right:4px;"></i>Market sentiment now</button>
+        <button class="qbtn" onclick="quickQ('Give me 3 high-probability setups based on today news and calendar.')"><i class="ti ti-crosshair" style="font-size:11px;margin-right:4px;"></i>Best setups today</button>
+      </div>
+      <div class="ai-input-row">
+        <input class="ai-inp" id="ai-inp" placeholder="Ask in any language..." onkeydown="if(event.key==='Enter')sendAI()" />
+        <button class="ai-send" onclick="sendAI()"><i class="ti ti-send"></i></button>
+      </div>
+    </div>
+
+  </div><!-- end body -->
+</div><!-- end app -->
+
+<script>
+// ==================== CONSTANTS ====================
+const SYS=`You are ForexIQ AI, an expert forex trading assistant. Analyze market impact of news on forex pairs (EUR/USD, GBP/USD, USD/JPY, XAU/USD, DXY, GBP/JPY, AUD/USD, USD/CAD, NZD/USD, USD/CHF, EUR/GBP), economic events (NFP, CPI, FOMC, GDP, PMI, central bank decisions), and geopolitical events. Give pip targets, key levels, direction bias. You are fully multilingual — detect the user's language and reply in that same language. Always give actionable analysis.`;
+const LANGS={en:'Reply in English.',es:'Responde en español.',fr:'Réponds en français.',de:'Antworte auf Deutsch.',pt:'Responde em português.',it:'Rispondi in italiano.',zh:'用中文回复。',ar:'أجب باللغة العربية。',ja:'日本語で答えてください。',ru:'Отвечай на русском.',ko:'한국어로 답변해 주세요.',tr:'Türkçe yanıtla.'};
+const PAIR_KWS={'EUR/USD':['europe','euro','ecb','eurozone','lagarde','germany','france'],'GBP/USD':['uk','britain','boe','bank of england','sterling','pound'],'USD/JPY':['japan','boj','yen','ueda','nikkei'],'XAU/USD':['gold','xau','haven','iran','israel','russia','ukraine','war','conflict','sanction','nuclear','geopolit'],'DXY':['dollar','fed','fomc','powell','nfp','payroll','cpi us','rate hike','rate cut'],'AUD/USD':['australia','rba','china pmi','commodity','iron ore'],'NZD/USD':['new zealand','rbnz','kiwi'],'USD/CAD':['canada','boc','oil','crude','opec'],'USD/CHF':['switzerland','snb','franc'],'GBP/JPY':['carry trade','volatility'],'EUR/GBP':['eu uk','brexit']};
+
+// ==================== STATE ====================
+let curLang='en',chatHistory=[],calHistory=[],allNews=[],curFilter='all',extraBans=[],userPosts=[],curPeriod='lifetime';
+let calWeekOffset=0,calSelectedDay=null;
+let currentUser=null;
+const registeredUsers=[];
+const ADMIN_KEY='forexiq-admin-2026';
+
+// ==================== AUTH ====================
+function showScreen(id){
+  document.querySelectorAll('.auth-screen').forEach(s=>s.classList.add('hidden'));
+  const el=document.getElementById('screen-'+id);
+  if(el)el.classList.remove('hidden');
+  else{document.querySelectorAll('.auth-screen').forEach(s=>s.classList.add('hidden'));document.getElementById('main-app').style.display='grid';}
+}
+
+function authTab(tab,type){
+  document.querySelectorAll('#screen-'+type+'-register .auth-tab').forEach(b=>b.classList.remove('on'));
+  event.target.classList.add('on');
+  document.getElementById('auth-register-'+type).style.display=tab==='register'?'block':'none';
+  if(document.getElementById('auth-login-'+type))document.getElementById('auth-login-'+type).style.display=tab==='login'?'block':'none';
+}
+
+function showAuthError(type,msg){
+  const el=document.getElementById('auth-error-'+type);
+  document.getElementById('auth-error-'+type+'-msg').textContent=msg;
+  el.style.display='flex';
+  setTimeout(()=>el.style.display='none',4000);
+}
+
+function doRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const username=document.getElementById('reg-username').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const pass=document.getElementById('reg-pass').value;
+  const country=document.getElementById('reg-country').value;
+  if(!name||!username||!email||!pass||!country){showAuthError('user','Please fill in all fields.');return;}
+  if(pass.length<8){showAuthError('user','Password must be at least 8 characters.');return;}
+  if(registeredUsers.find(u=>u.email===email)){showAuthError('user','This email is already registered.');return;}
+  const user={name,username:username.startsWith('@')?username:'@'+username,email,country,role:'r-standard',rl:'Standard',bg:'#1e293b',tc:'#64748b',initials:name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(),registeredAt:new Date(),payout:0,posts:0,likes:0,isAdmin:false};
+  registeredUsers.push(user);
+  loginUser(user);
+}
+
+function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  if(!email||!pass){showAuthError('user','Please enter your email and password.');return;}
+  const user=registeredUsers.find(u=>u.email===email);
+  if(!user){showAuthError('user','No account found with this email.');return;}
+  loginUser(user);
+}
+
+function doAdminLogin(){
+  const email=document.getElementById('admin-email').value.trim();
+  const pass=document.getElementById('admin-pass').value;
+  const key=document.getElementById('admin-key').value;
+  if(!email||!pass||!key){showAuthError('admin','Please fill all admin credentials.');return;}
+  if(key!==ADMIN_KEY){showAuthError('admin','Invalid admin key.');return;}
+  const adminUser={name:'Admin',username:'@admin',email,country:'—',role:'r-elite',rl:'Admin',bg:'#2a0f0f',tc:'#f87171',initials:'AD',registeredAt:new Date(Date.now()-365*24*3600*1000),payout:0,posts:0,likes:0,isAdmin:true};
+  loginUser(adminUser);
+}
+
+function loginUser(user){
+  currentUser=user;
+  document.querySelectorAll('.auth-screen').forEach(s=>s.classList.add('hidden'));
+  document.getElementById('main-app').style.display='grid';
+  const av=document.getElementById('user-av-hdr');
+  av.textContent=user.initials;av.style.background=user.bg;av.style.color=user.tc;
+  document.getElementById('user-name-hdr').textContent=user.username;
+  if(user.isAdmin)document.getElementById('nav-admin').style.display='flex';
+  renderAdminUsers();
+  initApp();
+}
+
+function initApp(){
+  renderForum();renderLB();loadNews();fetchPrices();updateClock();
+  initCalendar();
+  setInterval(updateClock,1000);
+  setInterval(fetchPrices,60000);
+  setInterval(loadNews,5*60*1000);
+}
+
+// ==================== PROFILE ====================
+const traderProfiles=[
+  {i:'MK',bg:'#2d1e15',tc:'#fb923c',name:'Marco Keller',username:'@mkeller_fx',role:'r-elite',rl:'Elite 500K+',country:'Germany',registeredAt:new Date('2021-03-15'),payout:612400,posts:47,likes:1240,isAdmin:false},
+  {i:'SR',bg:'#2d1d2d',tc:'#c084fc',name:'Sofia Ruiz',username:'@sofiaruizfx',role:'r-diamond',rl:'Diamond 200K+',country:'Spain',registeredAt:new Date('2022-01-08'),payout:238000,posts:89,likes:870,isAdmin:false},
+  {i:'JH',bg:'#2d2418',tc:'#fbbf24',name:'James Huang',username:'@jhuang_pro',role:'r-gold',rl:'Gold 100K+',country:'Australia',registeredAt:new Date('2022-06-20'),payout:143500,posts:62,likes:540,isAdmin:false},
+  {i:'AL',bg:'#1e2a3d',tc:'#60a5fa',name:'Ana López',username:'@analopez_t',role:'r-silver',rl:'Silver 50K+',country:'Mexico',registeredAt:new Date('2023-02-11'),payout:67200,posts:31,likes:280,isAdmin:false},
+  {i:'TP',bg:'#1a2e1a',tc:'#4ade80',name:'Tim Patel',username:'@timpatel25',role:'r-bronze',rl:'Bronze 25K+',country:'United Kingdom',registeredAt:new Date('2023-08-05'),payout:28900,posts:22,likes:95,isAdmin:false},
+  {i:'RN',bg:'#1a1f2e',tc:'#818cf8',name:'Ravi Nair',username:'@ravinair_fx',role:'r-verified',rl:'Verified Trader',country:'India',registeredAt:new Date('2024-01-19'),payout:4200,posts:14,likes:62,isAdmin:false},
+];
+
+function memberSince(date){
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[date.getMonth()]+' '+date.getFullYear();
+}
+
+function tenure(date){
+  const diff=Date.now()-date.getTime();
+  const days=Math.floor(diff/86400000);
+  if(days<30)return days+' days on platform';
+  if(days<365)return Math.floor(days/30)+' months on platform';
+  const y=Math.floor(days/365);const m=Math.floor((days%365)/30);
+  return y+'y '+(m>0?m+'m ':'')+' on platform';
+}
+
+function openProfile(user){
+  if(!user)return;
+  const p=traderProfiles.find(t=>t.username===user.username)||user;
+  const d=document.getElementById;
+  d('prf-av').textContent=p.initials||p.i||'?';
+  d('prf-av').style.background=p.bg||'#1e293b';
+  d('prf-av').style.color=p.tc||'#64748b';
+  d('prf-name').textContent=p.name;
+  d('prf-handle').textContent=p.username;
+  d('prf-role').innerHTML=`<span class="role-b ${p.role}">${p.rl}</span>`;
+  d('prf-country').textContent=p.country||'—';
+  const reg=p.registeredAt||new Date();
+  d('prf-since').textContent=memberSince(reg);
+  d('prf-tenure').textContent=tenure(reg);
+  d('prf-payout').textContent=p.payout>0?'$'+p.payout.toLocaleString():'$0';
+  d('prf-posts').textContent=p.posts||0;
+  d('prf-likes').textContent=p.likes>=1000?(p.likes/1000).toFixed(1)+'K':p.likes||0;
+  const recentPosts=[
+    {title:'EUR/USD triangle breakout analysis',tag:'t-analysis',tagL:'Analysis'},
+    {title:'Weekly market outlook — key levels to watch',tag:'t-news',tagL:'News'},
+  ];
+  d('prf-posts-list').innerHTML=recentPosts.map(post=>`<div class="post-mini"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:11px;color:var(--text2);">${post.title}</span><span class="tag-pill ${post.tag}" style="font-size:9px;padding:1px 6px;">${post.tagL}</span></div></div>`).join('');
+  d('prf-verified-badge').innerHTML=p.payout>0?`<div class="sb-ok sbadge" style="font-size:11px;padding:5px 10px;"><i class="ti ti-shield-check" style="font-size:12px;"></i> Verified payout — certified by ForexIQ</div>`:`<div style="font-size:11px;color:var(--text4);">No verified payouts yet.</div>`;
+  document.getElementById('profile-modal').classList.remove('hidden');
+}
+
+function closeProfile(){document.getElementById('profile-modal').classList.add('hidden');}
+
+// ==================== AI ====================
+async function callAI(messages,onDone){
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,system:SYS,messages})});
+    const d=await res.json();
+    onDone((d.content&&d.content[0]&&d.content[0].text)||'Unable to connect. Please try again.');
+  }catch{onDone('Connection error. Please check your internet connection.');}
+}
+
+function addMsg(id,role,html){
+  const c=document.getElementById(id);if(!c)return null;
+  const d=document.createElement('div');d.className=role==='ai'?'msg-ai':'msg-user';
+  if(role==='ai')d.innerHTML=`<div class="lbl"><i class="ti ti-sparkles" style="font-size:9px;"></i> ForexIQ AI</div>${html}`;
+  else d.textContent=html;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;return d;
+}
+function addLoading(id){return addMsg(id,'ai','<span class="dots">Analyzing<span>.</span><span>.</span><span>.</span></span>');}
+
+function sendAI(){
+  const inp=document.getElementById('ai-inp');const q=inp.value.trim();if(!q)return;inp.value='';
+  const ctx=allNews.length?'Current news: '+allNews.slice(0,3).map(n=>n.title).join(' | ')+'. ':'';
+  const lang=document.getElementById('lang-sel').value;
+  addMsg('chat-msgs','user',q);
+  const loading=addLoading('chat-msgs');
+  const msg=ctx+q+(lang!=='en'?'\n'+LANGS[lang]:'');
+  chatHistory.push({role:'user',content:msg});
+  callAI([...chatHistory],text=>{loading.innerHTML=`<div class="lbl"><i class="ti ti-sparkles" style="font-size:9px;"></i> ForexIQ AI</div>${text}`;chatHistory.push({role:'assistant',content:text});document.getElementById('chat-msgs').scrollTop=99999;});
+}
+
+function quickQ(q){document.getElementById('ai-inp').value=q;sendAI();}
+
+function analyzeNews(i){
+  const n=allNews[i];
+  document.querySelectorAll('.news-item').forEach(el=>el.classList.remove('active'));
+  const el=document.getElementById('ni-'+i);if(el)el.classList.add('active');
+  const lang=document.getElementById('lang-sel').value;
+  const q=`Analyze this forex news: "${n.title}". ${n.body?'Detail: '+n.body:''} Pairs: ${n.pairs.join(', ')}. Category: ${n.cat}. Give: 1) Direction per pair 2) Pip targets 3) Key levels 4) Risk management 5) Move duration. ${LANGS[lang]||''}`;
+  addMsg('chat-msgs','user','Analyze: '+n.title.slice(0,55)+'...');
+  const loading=addLoading('chat-msgs');
+  chatHistory.push({role:'user',content:q});
+  callAI([...chatHistory],text=>{loading.innerHTML=`<div class="lbl"><i class="ti ti-sparkles" style="font-size:9px;"></i> ForexIQ AI</div>${text}`;chatHistory.push({role:'assistant',content:text});document.getElementById('chat-msgs').scrollTop=99999;});
+}
+
+// ==================== NEWS ====================
+function mapPairs(text){
+  const t=text.toLowerCase();const found=[];
+  for(const[pair,kws]of Object.entries(PAIR_KWS)){if(kws.some(k=>t.includes(k)))found.push(pair);}
+  return found.length?found:['EUR/USD','DXY'];
+}
+function mapCat(text){
+  const t=text.toLowerCase();
+  if(/nfp|non.farm|payroll|employment|jobless/.test(t))return{cat:'NFP',imp:'high'};
+  if(/cpi|inflation|price index/.test(t))return{cat:'CPI',imp:'high'};
+  if(/fomc|federal reserve|powell|rate decision|rate hike|rate cut/.test(t))return{cat:'FOMC',imp:'high'};
+  if(/gdp|gross domestic/.test(t))return{cat:'GDP',imp:'med'};
+  if(/pmi|purchasing manager|manufacturing/.test(t))return{cat:'PMI',imp:'med'};
+  if(/ecb|lagarde|boe|bailey|boj|ueda|rba|central bank|monetary policy/.test(t))return{cat:'Central Bank',imp:'high'};
+  if(/war|conflict|iran|israel|russia|ukraine|sanction|military|nuclear/.test(t))return{cat:'Geopolitical',imp:'high'};
+  if(/trade|tariff|deal|wto|export|import/.test(t))return{cat:'Trade',imp:'med'};
+  return{cat:'Macro',imp:'low'};
+}
+function timeAgo(str){
+  try{const d=new Date(str),diff=Math.floor((Date.now()-d)/60000);
+  if(diff<1)return'just now';if(diff<60)return diff+' min ago';if(diff<1440)return Math.floor(diff/60)+' h ago';return Math.floor(diff/1440)+' d ago';}catch{return'';}
+}
+function isRelevant(t){return/forex|fx|currency|dollar|euro|yen|pound|gold|nfp|payroll|cpi|inflation|gdp|fomc|fed|ecb|boe|boj|rba|interest rate|central bank|trade|tariff|oil|crude|geopolit|iran|russia|ukraine|war|sanction|market|economy|monetary/.test(t.toLowerCase());}
+
+function getFallback(){return[
+  {title:'Fed signals two rate cuts possible in 2026 — dollar weakens',body:'FOMC minutes show growing easing consensus. EUR/USD, GBP/USD and gold rally as DXY falls to 103.40.',pub:new Date(Date.now()-4*60000).toISOString(),src:'Reuters'},
+  {title:'US-Iran nuclear deal talks resume in Geneva — oil drops, gold loses bid',body:'Diplomatic sources confirm renewed talks. Crude -1.8%. XAU/USD near $2,320.',pub:new Date(Date.now()-16*60000).toISOString(),src:'Bloomberg'},
+  {title:'NFP preview: consensus 185K — sharp USD volatility at 13:30 UTC',body:'A beat could send EUR/USD 40-80 pips lower. Miss below 160K accelerates rally toward 1.0960.',pub:new Date(Date.now()-30*60000).toISOString(),src:'FXStreet'},
+  {title:'ECB holds rates at 3.25% — Lagarde flags data-dependent approach',body:'Euro dipped before recovering. EUR/USD holding 1.0870 after initial volatility.',pub:new Date(Date.now()-48*60000).toISOString(),src:'Reuters'},
+  {title:'China PMI beats at 51.2 — AUD/USD and NZD/USD rally',body:'Stronger Chinese data boosted commodity currencies. AUD/USD +0.35% to 0.6552.',pub:new Date(Date.now()-65*60000).toISOString(),src:'Bloomberg'},
+  {title:'Eurozone CPI 2.8% YoY — beats consensus — EUR strengthens',body:'Hotter inflation reduces ECB cut bets. EUR/USD broke 1.0900 for first time in 3 weeks.',pub:new Date(Date.now()-92*60000).toISOString(),src:'Investing.com'},
+  {title:'Russia-Ukraine ceasefire talks collapse — JPY and CHF bid',body:'USD/JPY rises as safe-haven flows dominate. Gold recovering toward $2,340.',pub:new Date(Date.now()-124*60000).toISOString(),src:'Reuters'},
+  {title:'BoJ signals possible rate hike in Q3 2026 — USD/JPY drops 80 pips',body:'Governor Ueda hinted at policy normalization. USD/JPY fell to 149.10.',pub:new Date(Date.now()-155*60000).toISOString(),src:'Nikkei'},
+  {title:'US-China trade talks: tariff exemptions on tech goods',body:'Risk sentiment improves. AUD/USD outperforms on China optimism.',pub:new Date(Date.now()-185*60000).toISOString(),src:'WSJ'},
+  {title:'UK CPI drops to 2.2% — BoE June cut 68% priced — GBP/USD falls',body:'Lower UK inflation boosted BoE rate cut expectations. GBP/USD tested 1.2680 support.',pub:new Date(Date.now()-215*60000).toISOString(),src:'FT'},
+];}
+
+async function loadNews(){
+  document.getElementById('news-feed').innerHTML='<div style="padding:30px;text-align:center;color:var(--text4);"><i class="ti ti-loader" style="font-size:20px;display:block;margin-bottom:8px;"></i>Fetching live news...</div>';
+  const feeds=['https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.fxstreet.com%2Frss%2Fnews','https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.investing.com%2Frss%2Fnews.rss','https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ffeeds.reuters.com%2Frss%2FbusinessNews'];
+  const results=await Promise.allSettled(feeds.map(u=>fetch(u).then(r=>r.json()).catch(()=>null)));
+  let items=[];
+  results.forEach(r=>{if(r.status==='fulfilled'&&r.value&&r.value.items){r.value.items.slice(0,10).forEach(item=>{const title=item.title||'';const body=(item.description||item.content||'').replace(/<[^>]+>/g,'').trim().slice(0,220);if(title&&isRelevant(title+' '+body))items.push({title,body,pub:item.pubDate||new Date().toISOString(),src:r.value.feed?.title||'News'});});}});
+  if(items.length<5)items=[...items,...getFallback()];
+  items.sort((a,b)=>new Date(b.pub)-new Date(a.pub));
+  const seen=new Set();
+  items=items.filter(i=>{const k=i.title.slice(0,40);if(seen.has(k))return false;seen.add(k);return true;}).slice(0,25);
+  allNews=items.map(item=>{const pairs=mapPairs(item.title+' '+item.body);const{cat,imp}=mapCat(item.title+' '+item.body);const geo=/war|iran|russia|ukraine|conflict|geopolit|israel|sanction|military|nuclear/.test((item.title+item.body).toLowerCase());const trade=/trade|tariff|wto|export|import/.test((item.title+item.body).toLowerCase());return{...item,pairs,cat,imp,geo,trade};});
+  updateCounts();renderNews();
+}
+
+function updateCounts(){
+  document.getElementById('cnt-all').textContent=allNews.length;
+  document.getElementById('cnt-high').textContent=allNews.filter(n=>n.imp==='high').length;
+  document.getElementById('cnt-cbk').textContent=allNews.filter(n=>n.cat==='Central Bank'||n.cat==='FOMC').length;
+  document.getElementById('cnt-macro').textContent=allNews.filter(n=>['CPI','NFP','GDP','PMI'].includes(n.cat)).length;
+  document.getElementById('cnt-geo').textContent=allNews.filter(n=>n.geo).length;
+  document.getElementById('cnt-trade').textContent=allNews.filter(n=>n.trade).length;
+}
+
+function filterNews(type,btn){
+  curFilter=type;
+  document.querySelectorAll('.cat-btn,.fbtn').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  const m=document.getElementById('f-'+type);if(m)m.classList.add('on');
+  renderNews();
+}
+
+function renderNews(){
+  let data=allNews;
+  if(curFilter==='high')data=data.filter(n=>n.imp==='high');
+  else if(curFilter==='cbk')data=data.filter(n=>n.cat==='Central Bank'||n.cat==='FOMC');
+  else if(curFilter==='macro')data=data.filter(n=>['CPI','NFP','GDP','PMI'].includes(n.cat));
+  else if(curFilter==='geo')data=data.filter(n=>n.geo);
+  else if(curFilter==='trade')data=data.filter(n=>n.trade);
+  if(!data.length){document.getElementById('news-feed').innerHTML='<div style="padding:20px;text-align:center;color:var(--text4);">No news matching this filter.</div>';return;}
+  document.getElementById('news-feed').innerHTML=data.map((n,i)=>`
+    <div class="news-item" id="ni-${i}" onclick="analyzeNews(${i})">
+      <div class="ni-top"><span class="ni-src">${n.src}</span><span class="ni-time">${timeAgo(n.pub)}</span></div>
+      <div class="ni-title">${n.title}</div>
+      ${n.body?`<div class="ni-body">${n.body.slice(0,170)}...</div>`:''}
+      <div class="ni-tags">
+        <span class="imp-pill ${n.imp==='high'?'imp-h':n.imp==='med'?'imp-m':'imp-l'}">${n.imp==='high'?'High impact':n.imp==='med'?'Medium':'Low'}</span>
+        <span class="cat-tag">${n.cat}</span>
+        ${n.pairs.slice(0,4).map(p=>`<span class="pair-tag">${p}</span>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+// ==================== CALENDAR ====================
+const DAYS=['Mon','Tue','Wed','Thu','Fri'];
+const ALL_EVENTS=[
+  {dow:1,time:'09:00',imp:'h',name:'German CPI (YoY)',cur:'EUR',cons:'2.1%',bull:45,pred:'Below 2%: EUR/USD drops 20-40 pips toward 1.0850. Above 2.3%: EUR bounces toward 1.0930. Watch EUR/GBP cross too.'},
+  {dow:1,time:'10:00',imp:'m',name:'Eurozone Sentix',cur:'EUR',cons:'-5.0',bull:48,pred:'Low volatility expected. Only a major miss moves EUR meaningfully. 10-15 pip range reaction.'},
+  {dow:2,time:'07:00',imp:'h',name:'UK CPI (YoY)',cur:'GBP',cons:'2.2%',bull:38,pred:'Above 2.5%: GBP/USD rallies 30-50 pips, BoE cut bets drop. Below 2.0%: GBP/USD tests 1.2650 support. Key event for BoE pricing.'},
+  {dow:2,time:'13:30',imp:'h',name:'US CPI (YoY)',cur:'USD',cons:'3.1%',bull:40,pred:'Above 3.4%: DXY surges, EUR/USD drops 50-80 pips. Below 2.8%: USD weakens across board, gold rallies $20+. Major volatility event.'},
+  {dow:2,time:'15:00',imp:'m',name:'US JOLTS Job Openings',cur:'USD',cons:'8.6M',bull:55,pred:'Secondary catalyst. Watch USD/CAD for cleanest reaction. 15-25 pip move expected.'},
+  {dow:3,time:'12:00',imp:'h',name:'BoE Rate Decision',cur:'GBP',cons:'Hold 5.25%',bull:50,pred:'Hold + dovish statement: GBP/USD breaks 1.2700. Hawkish surprise: targets 1.2850. Statement tone drives move more than decision.'},
+  {dow:3,time:'13:30',imp:'h',name:'US Initial Jobless Claims',cur:'USD',cons:'215K',bull:58,pred:'Below 200K: mild USD strength 15-25 pips. Above 240K: USD weakness, watch EUR/USD and gold.'},
+  {dow:3,time:'14:00',imp:'m',name:'US PPI (MoM)',cur:'USD',cons:'0.2%',bull:50,pred:'Typically low impact unless significantly off consensus. Watch as leading indicator for next CPI print.'},
+  {dow:4,time:'08:30',imp:'h',name:'Non-Farm Payrolls',cur:'USD',cons:'185K',bull:62,pred:'Beat >185K: EUR/USD drops 40-80 pips, XAU/USD toward $2,300. Miss <160K: EUR/USD targets 1.0960, gold back to $2,360+.'},
+  {dow:4,time:'08:30',imp:'h',name:'US Unemployment Rate',cur:'USD',cons:'3.9%',bull:55,pred:'Released with NFP. Rising unemployment dampens dollar. Below 3.7% adds to dollar strength on NFP beat.'},
+  {dow:4,time:'10:00',imp:'m',name:'Michigan Consumer Sentiment',cur:'USD',cons:'68.0',bull:52,pred:'Low impact. Only extreme readings (<60 or >75) move USD. Late session signal only.'},
+  {dow:5,time:'10:00',imp:'h',name:'Eurozone GDP (QoQ)',cur:'EUR',cons:'0.3%',bull:48,pred:'Below 0%: EUR/USD breaks 1.0840 support. Above 0.5%: EUR rallies toward 1.0950. German component is key.'},
+  {dow:5,time:'15:45',imp:'m',name:'US Manufacturing PMI',cur:'USD',cons:'50.2',bull:52,pred:'Low impact. Only miss below 49 moves USD meaningfully (10-15 pips max). Confirmation signal only.'},
+  {dow:8,time:'09:30',imp:'h',name:'ECB Rate Decision',cur:'EUR',cons:'Hold 3.25%',bull:45,pred:'Hold + dovish: EUR/USD breaks 1.0800. Cut surprise: EUR/USD targets 1.0720. Press conference is key — Lagarde tone drives the move.'},
+  {dow:8,time:'10:00',imp:'m',name:'Eurozone Trade Balance',cur:'EUR',cons:'€15B',bull:50,pred:'Modest market impact. Surplus wider than expected mildly supports EUR. Watch EUR/GBP cross.'},
+  {dow:9,time:'08:30',imp:'h',name:'UK GDP (QoQ)',cur:'GBP',cons:'0.4%',bull:50,pred:'Below 0%: GBP/USD tests 1.2650. Above 0.6%: GBP/USD targets 1.2820. BoE cut expectations key variable.'},
+  {dow:9,time:'13:30',imp:'h',name:'US Retail Sales (MoM)',cur:'USD',cons:'0.3%',bull:58,pred:'Above 0.6%: USD strengthens 20-40 pips broadly. Negative print: USD sells off, EUR/USD above 1.0920.'},
+  {dow:10,time:'13:30',imp:'h',name:'FOMC Meeting Minutes',cur:'USD',cons:'—',bull:50,pred:'High volatility potential. Hawkish tone: USD rallies, gold drops. Dovish pivot signals: USD weakness, gold above $2,360.'},
+  {dow:10,time:'15:00',imp:'m',name:'US Existing Home Sales',cur:'USD',cons:'4.2M',bull:52,pred:'Low forex impact. Background indicator for USD. Watch DXY for directional bias.'},
+];
+
+let calWeekStart=null;
+let calActiveDay=null;
+
+function getMondayOfWeek(offset=0){
+  const now=new Date();
+  const day=now.getDay();
+  const diff=day===0?-6:1-day;
+  const mon=new Date(now);
+  mon.setDate(now.getDate()+diff+offset*7);
+  mon.setHours(0,0,0,0);
+  return mon;
+}
+
+function initCalendar(){
+  calWeekOffset=0;
+  const now=new Date();
+  const day=now.getDay();
+  calActiveDay=day===0||day===6?1:day;
+  renderCalendarWeek();
+}
+
+function calChangeWeek(dir){
+  calWeekOffset+=dir;
+  if(calWeekOffset<0)calWeekOffset=0;
+  if(calWeekOffset>1)calWeekOffset=1;
+  renderCalendarWeek();
+}
+
+function renderCalendarWeek(){
+  const mon=getMondayOfWeek(calWeekOffset);
+  const fri=new Date(mon);fri.setDate(mon.getDate()+4);
+  const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  document.getElementById('cal-week-range').textContent=fmt(mon)+' — '+fmt(fri)+' '+fri.getFullYear();
+  document.getElementById('cal-week-label').textContent=calWeekOffset===0?'This week':'Next week';
+
+  const today=new Date();today.setHours(0,0,0,0);
+  const todayDow=today.getDay()===0?7:today.getDay();
+
+  const tabs=document.getElementById('cal-day-tabs');
+  tabs.innerHTML=DAYS.map((name,i)=>{
+    const dayNum=i+1;
+    const date=new Date(mon);date.setDate(mon.getDate()+i);
+    const dateStr=date.getDate();
+    const isToday=calWeekOffset===0&&dayNum===todayDow;
+    const isActive=calActiveDay===dayNum;
+    return`<button class="day-tab${isActive?' on':''}${isToday?' today':''}" onclick="selectCalDay(${dayNum},this)">
+      <div style="font-size:10px;font-weight:600;">${name}</div>
+      <div style="font-size:9px;margin-top:1px;opacity:.7;">${dateStr}</div>
+    </button>`;
+  }).join('');
+
+  renderCalendarDay(calActiveDay);
+}
+
+function selectCalDay(dow,btn){
+  calActiveDay=dow;
+  document.querySelectorAll('.day-tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('cal-detail').style.display='none';
+  renderCalendarDay(dow);
+}
+
+function renderCalendarDay(dow){
+  const events=ALL_EVENTS.filter(e=>e.dow===dow||(calWeekOffset===1&&e.dow===dow+7));
+  const dayEvents=ALL_EVENTS.filter(e=>e.dow===dow);
+  if(!dayEvents.length){
+    document.getElementById('cal-rows').innerHTML=`<div style="padding:30px;text-align:center;color:var(--text4);"><i class="ti ti-calendar-off" style="font-size:20px;display:block;margin-bottom:8px;"></i>No scheduled events this day.</div>`;
+    return;
+  }
+  document.getElementById('cal-rows').innerHTML=dayEvents.map((e,i)=>`
+    <div class="cal-row" onclick="analyzeCalEvent(${ALL_EVENTS.indexOf(e)})">
+      <div><div class="cal-time">${e.time} UTC</div><div style="font-size:10px;color:var(--text4);">${e.cur}</div></div>
+      <div class="imp-dot ${e.imp==='h'?'idh':e.imp==='m'?'idm':'idl'}"></div>
+      <div><div style="font-size:12px;font-weight:600;color:var(--text1);">${e.name}</div><div style="font-size:10px;color:var(--text4);">Consensus: ${e.cons}</div></div>
+      <span class="cal-pred ${e.bull>55?'pred-b':e.bull<45?'pred-r':'pred-n'}">${e.bull>55?'Bullish':e.bull<45?'Bearish':'Neutral'}</span>
+    </div>`).join('');
+}
+
+function analyzeCalEvent(idx){
+  const e=ALL_EVENTS[idx];if(!e)return;
+  document.getElementById('cal-name').textContent=e.name+' ('+e.cur+')';
+  document.getElementById('cal-pred-text').textContent=e.pred;
+  document.getElementById('bp').textContent=e.bull+'%';document.getElementById('rp').textContent=(100-e.bull)+'%';
+  document.getElementById('bb').style.width=e.bull+'%';document.getElementById('rb').style.width=(100-e.bull)+'%';
+  document.getElementById('cal-detail').style.display='block';
+  addMsg('chat-msgs','user','Analyze: '+e.name);
+  const loading=addLoading('chat-msgs');
+  const q=`Economic event: ${e.name} (${e.cur}). Consensus: ${e.cons}. Bullish prob: ${e.bull}%. Give: pairs that move, direction per scenario (beat/meet/miss), pip targets, key levels, safe entry advice.`;
+  chatHistory.push({role:'user',content:q});
+  callAI([...chatHistory],text=>{loading.innerHTML=`<div class="lbl"><i class="ti ti-sparkles" style="font-size:9px;"></i> ForexIQ AI</div>${text}`;chatHistory.push({role:'assistant',content:text});document.getElementById('chat-msgs').scrollTop=99999;});
+}
+
+// ==================== FORUM ====================
+const forumSeed=[
+  {i:'MK',bg:'#2d1e15',tc:'#fb923c',name:'Marco Keller',username:'@mkeller_fx',role:'r-elite',rl:'Elite',title:'EUR/USD weekly technical analysis — triangle breakout incoming?',tag:'t-analysis',tagL:'Analysis',time:'12 min ago',likes:47,replies:8,body:'H4 chart showing symmetrical triangle. Above 1.0920 with volume → target 1.0950-1.0980. Invalidation below 1.0840.'},
+  {i:'SR',bg:'#2d1d2d',tc:'#c084fc',name:'Sofia Ruiz',username:'@sofiaruizfx',role:'r-diamond',rl:'Diamond',title:'SIGNAL: Short GBP/USD ahead of BoE decision — RR 1:3',tag:'t-signal',tagL:'Signal',time:'1 h ago',likes:89,replies:14,body:'Entry: 1.2760 | SL: 1.2800 | TP1: 1.2700 | TP2: 1.2650. Classic sell-the-news setup.'},
+  {i:'RN',bg:'#1a1f2e',tc:'#818cf8',name:'Ravi Nair',username:'@ravinair_fx',role:'r-verified',rl:'Verified',title:'Is prop trading dying? Honest take after 5 years',tag:'t-debate',tagL:'Debate',time:'2 h ago',likes:62,replies:21,body:'The model is valid if the firm is solvent. Research before you fund.'},
+  {i:'AL',bg:'#1e2a3d',tc:'#60a5fa',name:'Ana López',username:'@analopez_t',role:'r-silver',rl:'Silver',title:'Gold macro outlook — $2,400 before end of Q2?',tag:'t-news',tagL:'News',time:'3 h ago',likes:31,replies:6,body:'XAU/USD driven by DXY weakness, central bank buying, and geopolitical premium.'},
+  {i:'JH',bg:'#2d2418',tc:'#fbbf24',name:'James Huang',username:'@jhuang_pro',role:'r-gold',rl:'Gold',title:'USD/JPY setup: BoJ divergence trade still alive',tag:'t-analysis',tagL:'Analysis',time:'4 h ago',likes:44,replies:9,body:'BoJ hike expectations growing. Short USD/JPY on bounces toward 150.50-151.00. Target: 148.50.'},
+];
+
+function renderForum(){
+  const all=[...userPosts,...forumSeed];
+  document.getElementById('forum-feed').innerHTML=all.map(t=>`
+    <div class="forum-thread">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text1);line-height:1.4;flex:1;">${t.title}</div>
+        <span class="tag-pill ${t.tag}">${t.tagL}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:9px;">${t.body}</div>
+      <div style="display:flex;align-items:center;gap:7px;">
+        <div class="av" style="width:22px;height:22px;background:${t.bg};color:${t.tc};font-size:9px;cursor:pointer;" onclick="openProfile({name:'${t.name}',username:'${t.username}',bg:'${t.bg}',tc:'${t.tc}',initials:'${t.i}',role:'${t.role}',rl:'${t.rl}'})">${t.i}</div>
+        <span style="font-size:11px;color:var(--text2);cursor:pointer;" onclick="openProfile({name:'${t.name}',username:'${t.username}',bg:'${t.bg}',tc:'${t.tc}',initials:'${t.i}',role:'${t.role}',rl:'${t.rl}'})">${t.name}</span>
+        <span class="role-b ${t.role}">${t.rl}</span>
+        <div style="margin-left:auto;display:flex;gap:10px;">
+          <span style="font-size:10px;color:var(--text4);"><i class="ti ti-heart" style="font-size:11px;"></i> ${t.likes||0}</span>
+          <span style="font-size:10px;color:var(--text4);"><i class="ti ti-message" style="font-size:11px;"></i> ${typeof t.replies==='number'?t.replies:0}</span>
+          <span style="font-size:10px;color:var(--text4);">${t.time}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function submitPost(){
+  const title=document.getElementById('post-title').value.trim();
+  const body=document.getElementById('post-body').value.trim();
+  const tag=document.getElementById('post-tag').value;
+  const labels={'t-analysis':'Analysis','t-signal':'Signal','t-debate':'Debate','t-news':'News'};
+  if(!title||!body)return;
+  const u=currentUser||{name:'You',username:'@you',bg:'#1e293b',tc:'#64748b',initials:'YO',role:'r-standard',rl:'Standard'};
+  userPosts.unshift({i:u.initials,bg:u.bg,tc:u.tc,name:u.name,username:u.username,role:u.role,rl:u.rl,title,body,tag,tagL:labels[tag],time:'just now',likes:0,replies:0});
+  document.getElementById('post-title').value='';document.getElementById('post-body').value='';
+  document.getElementById('compose-bar').classList.remove('on');
+  renderForum();
+}
+
+// ==================== LEADERBOARD ====================
+const traders=[
+  {i:'MK',bg:'#2d1e15',tc:'#fb923c',name:'Marco Keller',username:'@mkeller_fx',role:'r-elite',rl:'Elite 500K+',lt:612400,mo:48200,wk:11300,lc:'+8.2%',mc:'+3.1%',wc:'+1.4%'},
+  {i:'SR',bg:'#2d1d2d',tc:'#c084fc',name:'Sofia Ruiz',username:'@sofiaruizfx',role:'r-diamond',rl:'Diamond 200K+',lt:238000,mo:31500,wk:7800,lc:'+5.1%',mc:'+2.4%',wc:'-0.3%'},
+  {i:'JH',bg:'#2d2418',tc:'#fbbf24',name:'James Huang',username:'@jhuang_pro',role:'r-gold',rl:'Gold 100K+',lt:143500,mo:19200,wk:4100,lc:'+12.3%',mc:'+5.6%',wc:'+2.1%'},
+  {i:'AL',bg:'#1e2a3d',tc:'#60a5fa',name:'Ana López',username:'@analopez_t',role:'r-silver',rl:'Silver 50K+',lt:67200,mo:9800,wk:2200,lc:'+3.8%',mc:'+1.9%',wc:'+0.8%'},
+  {i:'TP',bg:'#1a2e1a',tc:'#4ade80',name:'Tim Patel',username:'@timpatel25',role:'r-bronze',rl:'Bronze 25K+',lt:28900,mo:6100,wk:1400,lc:'+19.2%',mc:'+8.4%',wc:'+3.2%'},
+  {i:'RN',bg:'#1a1f2e',tc:'#818cf8',name:'Ravi Nair',username:'@ravinair_fx',role:'r-verified',rl:'Verified Trader',lt:4200,mo:1800,wk:420,lc:'+41%',mc:'+15%',wc:'+6%'},
+];
+const periods={lifetime:{k:'lt',ck:'lc',lbl:'All-time certified payouts'},monthly:{k:'mo',ck:'mc',lbl:'May 2026 — monthly payouts'},weekly:{k:'wk',ck:'wc',lbl:'Week 21 (May 19–25)'}};
+const topCls=['t1','t2','t3','','',''];
+const rankColors=['#fb923c','#c084fc','#fbbf24','#6b7280','#6b7280','#818cf8'];
+
+function setPeriod(p,btn){curPeriod=p;document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderLB();}
+
+function renderLB(){
+  const{k,ck,lbl}=periods[curPeriod];
+  document.getElementById('lb-label').textContent=lbl;
+  const sorted=[...traders].sort((a,b)=>b[k]-a[k]);
+  document.getElementById('lb-rows').innerHTML=sorted.map((t,i)=>{
+    const chg=t[ck];const up=chg.startsWith('+');
+    return`<div class="lb-row ${topCls[i]||''}" onclick="openProfile({name:'${t.name}',username:'${t.username}',bg:'${t.bg}',tc:'${t.tc}',initials:'${t.i}',role:'${t.role}',rl:'${t.rl}'})">
+      <div style="font-size:12px;font-weight:700;color:${rankColors[i]||'var(--text4)'};text-align:center;">${i+1}</div>
+      <div class="av" style="width:30px;height:30px;background:${t.bg};color:${t.tc};font-size:10px;">${t.i}</div>
+      <div style="min-width:0;"><div style="font-size:12px;font-weight:600;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.name} <span class="role-b ${t.role}">${t.rl}</span></div><div style="font-size:10px;color:var(--text4);">${t.username}</div></div>
+      <div style="font-size:13px;font-weight:700;color:var(--text1);text-align:right;">${t[k]>0?'$'+t[k].toLocaleString():'—'}</div>
+      <div style="font-size:11px;text-align:right;color:${up?'var(--up)':'var(--dn)'};">${chg}</div>
+    </div>`;
+  }).join('');
+}
+
+// ==================== AFFILIATES ====================
+const firms=[
+  {name:'FTMO',i:'FT',bg:'#1e2a3d',tc:'#60a5fa',disc:15,comm:10,clicks:1240,conv:87,earned:3480,code:'FOREXIQ15',status:'Active'},
+  {name:'Funded Next',i:'FN',bg:'#0f2a1a',tc:'#4ade80',disc:10,comm:8,clicks:890,conv:61,earned:2196,code:'FXIQ10',status:'Active'},
+  {name:'The5%ers',i:'5E',bg:'#2d1e15',tc:'#fb923c',disc:10,comm:7,clicks:0,conv:0,earned:0,code:'IQTRADE',status:'Pending'},
+  {name:'Apex Trader',i:'AT',bg:'#2d2418',tc:'#fbbf24',disc:12,comm:10,clicks:0,conv:0,earned:0,code:'FXIQ-APEX',status:'Pending'},
+];
+
+function renderFirms(){
+  document.getElementById('firm-cards').innerHTML=firms.map(f=>`
+    <div class="firm-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="av" style="width:38px;height:38px;border-radius:8px;background:${f.bg};color:${f.tc};font-size:12px;">${f.i}</div>
+          <div><div style="font-size:13px;font-weight:700;color:var(--text1);">${f.name}</div><div style="font-size:10px;color:var(--text3);">${f.disc}% discount · ${f.comm}% commission</div></div>
+        </div>
+        <span class="sbadge ${f.status==='Active'?'sb-ok':'sb-warn'}">${f.status}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div style="background:var(--bg1);border-radius:6px;padding:8px;"><div style="font-size:14px;font-weight:700;color:var(--text1);">${f.clicks.toLocaleString()}</div><div style="font-size:10px;color:var(--text4);">Clicks</div></div>
+        <div style="background:var(--bg1);border-radius:6px;padding:8px;"><div style="font-size:14px;font-weight:700;color:var(--text1);">${f.conv}</div><div style="font-size:10px;color:var(--text4);">Conversions</div></div>
+        <div style="background:var(--bg1);border-radius:6px;padding:8px;"><div style="font-size:14px;font-weight:700;color:var(--up);">$${f.earned.toLocaleString()}</div><div style="font-size:10px;color:var(--text4);">Earned</div></div>
+      </div>
+      <div class="code-box">
+        <div><div style="font-size:10px;color:var(--text4);margin-bottom:3px;">Exclusive code</div><div class="code-val">${f.code}</div></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="background:#0f2a1a;color:var(--up);border:1px solid #16653455;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700;">-${f.disc}%</span>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('${f.code}').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})">Copy</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ==================== ADMIN / BANS ====================
+const seedBans=[
+  {i:'UX',bg:'#2a0f0f',tc:'#f87171',name:'unknown_x99',reason:'Spam / flooding — 89 posts in 2 hours',dur:'Permanent',s:'sb-err',sl:'Banned'},
+  {i:'PB',bg:'#2d2418',tc:'#fbbf24',name:'promo_bot44',reason:'Unauthorized advertising',dur:'30 days',s:'sb-warn',sl:'Temporary'},
+];
+
+function renderBans(){
+  const all=[...extraBans,...seedBans];
+  document.getElementById('ban-list').innerHTML=all.length?all.map((u,i)=>`
+    <div class="ban-row" id="banrow-${i}">
+      <div class="av" style="width:28px;height:28px;background:${u.bg};color:${u.tc};font-size:10px;">${u.i}</div>
+      <div><div style="font-size:12px;font-weight:600;color:var(--text1);">@${u.name}</div><div style="font-size:10px;color:var(--text3);">${u.reason} · ${u.dur}</div></div>
+      <span class="sbadge ${u.s}">${u.sl}</span>
+      <button class="abtn abtn-warn" onclick="alert('Warning sent to @${u.name}. Logged in audit.')">Warn</button>
+      <button class="abtn abtn-lift" onclick="document.getElementById('banrow-${i}').style.opacity='.3';document.getElementById('banrow-${i}').style.pointerEvents='none'">Lift</button>
+    </div>`).join(''):'<div style="color:var(--text4);font-size:11px;padding:10px 0;">No active bans.</div>';
+}
+
+function doBan(){
+  const u=document.getElementById('ban-user').value.trim().replace('@','');
+  if(!u){alert('Enter a username.');return;}
+  const r=document.getElementById('ban-reason');const d=document.getElementById('ban-dur');
+  extraBans.unshift({i:u.slice(0,2).toUpperCase(),bg:'#2a0f0f',tc:'#f87171',name:u,reason:r.options[r.selectedIndex].text,dur:d.options[d.selectedIndex].text,s:'sb-err',sl:d.value==='perm'?'Banned':'Temporary'});
+  document.getElementById('ban-user').value='';renderBans();
+}
+
+function renderAdminUsers(){
+  const el=document.getElementById('admin-users-list');if(!el)return;
+  const allUsers=[...registeredUsers,...traderProfiles];
+  el.innerHTML=allUsers.map(u=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="openProfile({name:'${u.name}',username:'${u.username||u.handle||'@'+u.name.toLowerCase().replace(' ','')}',bg:'${u.bg}',tc:'${u.tc}',initials:'${u.initials||u.i}',role:'${u.role}',rl:'${u.rl}'})">
+      <div class="av" style="width:28px;height:28px;background:${u.bg};color:${u.tc};font-size:10px;">${u.initials||u.i}</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;color:var(--text1);">${u.name}</div><div style="font-size:10px;color:var(--text4);">${u.username||'@'+u.name.toLowerCase().replace(' ','')} · ${memberSince(u.registeredAt||new Date('2024-01-01'))}</div></div>
+      <span class="role-b ${u.role}">${u.rl}</span>
+    </div>`).join('');
+}
+
+// ==================== PRICES ====================
+let liveRates={};
+async function fetchPrices(){
+  try{const r=await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');const j=await r.json();liveRates=j.usd;}catch{}
+  const pairs=[
+    {p:'EUR/USD',v:liveRates.eur?(1/liveRates.eur).toFixed(4):'1.0892',chg:+0.18},
+    {p:'GBP/USD',v:liveRates.gbp?(1/liveRates.gbp).toFixed(4):'1.2743',chg:-0.12},
+    {p:'USD/JPY',v:liveRates.jpy?liveRates.jpy.toFixed(2):'149.82',chg:-0.31},
+    {p:'XAU/USD',v:liveRates.xau?(1/liveRates.xau).toFixed(2):'2341.50',chg:+0.55},
+    {p:'DXY',v:'103.42',chg:-0.21},
+    {p:'AUD/USD',v:liveRates.aud?(1/liveRates.aud).toFixed(4):'0.6521',chg:+0.22},
+    {p:'USD/CHF',v:liveRates.chf?liveRates.chf.toFixed(4):'0.9012',chg:+0.08},
+    {p:'NZD/USD',v:liveRates.nzd?(1/liveRates.nzd).toFixed(4):'0.5981',chg:-0.19},
+    {p:'USD/CAD',v:liveRates.cad?liveRates.cad.toFixed(4):'1.3642',chg:-0.07},
+    {p:'GBP/JPY',v:(liveRates.gbp&&liveRates.jpy)?((1/liveRates.gbp)*liveRates.jpy).toFixed(2):'191.03',chg:-0.43},
+  ];
+  const html=pairs.map(x=>`<span class="tick-item"><span class="tick-pair">${x.p}</span><span class="tick-price">${x.v}</span><span class="tick-chg ${x.chg>=0?'up':'dn'}">${x.chg>=0?'▲':'▼'}${Math.abs(x.chg).toFixed(2)}%</span></span>`).join('');
+  document.getElementById('ticker').innerHTML=html+html;
+  document.getElementById('mini-prices').innerHTML=pairs.slice(0,8).map(x=>`<div class="pair-item"><span class="pair-name">${x.p}</span><span style="font-size:11px;color:var(--text1);">${x.v}</span><span class="pair-chg ${x.chg>=0?'up':'dn'}" style="font-size:10px;">${x.chg>=0?'+':''}${x.chg.toFixed(2)}%</span></div>`).join('');
+}
+
+// ==================== VIEWS / CLOCK ====================
+function setView(v,btn){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('on'));
+  document.querySelectorAll('.nbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('view-'+v).classList.add('on');
+  btn.classList.add('on');
+  if(v==='calendar')initCalendar();
+  if(v==='leaderboard')renderLB();
+  if(v==='affiliates')renderFirms();
+  if(v==='admin'){renderBans();renderAdminUsers();}
+  if(v==='forum')renderForum();
+}
+
+function goHome(){setView('news',document.getElementById('nav-news'));}
+
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=n.getUTCHours().toString().padStart(2,'0')+':'+n.getUTCMinutes().toString().padStart(2,'0');
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('today-label').textContent=days[n.getDay()]+', '+months[n.getMonth()]+' '+n.getDate();
+}
+</script>
+</body>
+</html>
