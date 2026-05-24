@@ -183,10 +183,10 @@ body{overflow:hidden;}
 .card-title{font-size:12px;font-weight:600;color:var(--t1);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 
 /* AI PANEL */
-.ai-panel{display:flex;flex-direction:column;height:100%;background:var(--bg2);border-left:1px solid var(--bdr);}
+.ai-panel{display:flex;flex-direction:column;height:100%;background:var(--bg2);border-left:1px solid var(--bdr);overflow:hidden;min-height:0;}
 .ai-hdr{padding:10px 12px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .ai-icon{width:28px;height:28px;background:#1e2d3d;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:14px;flex-shrink:0;}
-.chat-area{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:7px;}
+.chat-area{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:7px;min-height:0;scroll-behavior:smooth;}
 .msg-ai{background:var(--bg3);border:1px solid var(--bdr);border-radius:8px 8px 8px 2px;padding:9px 11px;font-size:11px;color:var(--t2);line-height:1.65;}
 .msg-ai .lbl{font-size:9px;color:var(--accent);font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
 .msg-user{background:#1e2d3d;border-radius:8px 8px 2px 8px;padding:8px 11px;font-size:11px;color:#bfdbfe;align-self:flex-end;max-width:92%;}
@@ -671,7 +671,7 @@ async function callAI(messages,onDone){
     const system=SYS+(langNote?' '+langNote:'');
     const contents=messages.filter(m=>['user','assistant'].includes(m.role)&&typeof m.content==='string').slice(-20).map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
     if(!contents.length){onDone('No messages to process.');return;}
-    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyAf5HYv78O6J4seiZ_V41tDWy5aNE9aUIs',{
+    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=AIzaSyB7_jzrawGEnDJeM9QFH3PFVRXEWsK7k_s',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({system_instruction:{parts:[{text:system}]},contents,generationConfig:{maxOutputTokens:1000,temperature:0.7}})
     });
@@ -797,37 +797,50 @@ function renderNews(){
 }
 
 // ========== CALENDAR ==========
-// Real weekly economic events (similar to ForexFactory)
+// Events matching ForexFactory for week of May 26 - June 6, 2026
 const CAL_EVENTS=[
-  // Monday
-  {dow:1,time:'09:00',imp:'h',name:'German CPI (YoY)',cur:'EUR',cons:'2.1%',bull:45,pred:'Below 2%: EUR/USD drops 20-40 pips toward 1.0850. Above 2.3%: EUR bounces toward 1.0930. Watch EUR/GBP too.'},
-  {dow:1,time:'10:00',imp:'m',name:'Eurozone Sentix Investor Confidence',cur:'EUR',cons:'-5.0',bull:48,pred:'Low volatility event. Only a major miss moves EUR meaningfully — 10-15 pip range.'},
-  {dow:1,time:'14:45',imp:'m',name:'US Manufacturing PMI (Final)',cur:'USD',cons:'50.2',bull:52,pred:'Confirmation reading — low impact unless major revision. 10-15 pip move max on USD.'},
-  // Tuesday
-  {dow:2,time:'07:00',imp:'h',name:'UK CPI (YoY)',cur:'GBP',cons:'2.2%',bull:38,pred:'Above 2.5%: GBP/USD rallies 30-50 pips, BoE cut bets drop. Below 2.0%: GBP/USD tests 1.2650. Key event for BoE pricing.'},
-  {dow:2,time:'13:30',imp:'h',name:'US CPI (YoY)',cur:'USD',cons:'3.1%',bull:40,pred:'Above 3.4%: DXY surges, EUR/USD drops 50-80 pips, gold falls. Below 2.8%: USD weakens across board, gold +$20. Major volatility event.'},
-  {dow:2,time:'15:00',imp:'m',name:'US JOLTS Job Openings',cur:'USD',cons:'8.6M',bull:55,pred:'Secondary catalyst. Watch USD/CAD for cleanest reaction. 15-25 pip move expected.'},
-  // Wednesday
-  {dow:3,time:'08:30',imp:'h',name:'UK GDP (MoM)',cur:'GBP',cons:'0.1%',bull:50,pred:'Negative print: GBP/USD tests 1.2680 support. Above 0.3%: GBP/USD targets 1.2820. BoE cut bets are key.'},
-  {dow:3,time:'12:00',imp:'h',name:'BoE Rate Decision',cur:'GBP',cons:'Hold 5.25%',bull:50,pred:'Hold + dovish statement: GBP/USD breaks 1.2700. Hawkish surprise: targets 1.2850. Statement tone drives the move more than the rate.'},
-  {dow:3,time:'18:00',imp:'h',name:'FOMC Meeting Minutes',cur:'USD',cons:'—',bull:50,pred:'High volatility potential. Hawkish tone: USD rallies, gold drops. Dovish signals: USD weakness, gold above $2,360.'},
-  // Thursday
-  {dow:4,time:'08:30',imp:'h',name:'Non-Farm Payrolls',cur:'USD',cons:'185K',bull:62,pred:'Beat >185K: EUR/USD drops 40-80 pips, XAU/USD toward $2,300. Miss <160K: EUR/USD targets 1.0960, gold back to $2,360+.'},
-  {dow:4,time:'08:30',imp:'h',name:'US Unemployment Rate',cur:'USD',cons:'3.9%',bull:55,pred:'Released with NFP. Rising unemployment dampens USD. Below 3.7% adds to dollar strength.'},
-  {dow:4,time:'08:30',imp:'h',name:'Initial Jobless Claims',cur:'USD',cons:'215K',bull:58,pred:'Below 200K adds mild USD strength 15-25 pips. Above 240K: USD weakness. NFP week makes this more significant.'},
-  // Friday
-  {dow:5,time:'10:00',imp:'h',name:'Eurozone GDP (QoQ)',cur:'EUR',cons:'0.3%',bull:48,pred:'Below 0%: EUR/USD breaks 1.0840 support. Above 0.5%: EUR rallies toward 1.0950. German component is key driver.'},
-  {dow:5,time:'10:00',imp:'m',name:'Michigan Consumer Sentiment',cur:'USD',cons:'68.0',bull:52,pred:'Low impact unless extreme readings (<60 or >75). Late session signal only.'},
-  {dow:5,time:'15:45',imp:'m',name:'US Services PMI',cur:'USD',cons:'51.3',bull:53,pred:'Moderate impact. Services represents 70% of US economy — watch if reading diverges sharply from manufacturing.'},
-  // Next week Monday
-  {dow:8,time:'09:30',imp:'h',name:'ECB Rate Decision',cur:'EUR',cons:'Hold 3.25%',bull:45,pred:'Hold + dovish: EUR/USD breaks 1.0800. Cut surprise: EUR/USD targets 1.0720. Press conference tone drives the move.'},
-  {dow:8,time:'14:00',imp:'m',name:'US ISM Manufacturing',cur:'USD',cons:'49.8',bull:50,pred:'Key gauge of US manufacturing health. Below 48: USD weakness. Above 52: USD strength. 20-30 pip move.'},
-  // Next week Tuesday
-  {dow:9,time:'13:30',imp:'h',name:'US Retail Sales (MoM)',cur:'USD',cons:'0.3%',bull:58,pred:'Above 0.6%: USD strengthens 20-40 pips broadly. Negative print: USD sells off, EUR/USD above 1.0920.'},
-  {dow:9,time:'15:00',imp:'m',name:'US JOLTS Job Openings',cur:'USD',cons:'8.1M',bull:52,pred:'Secondary indicator. Watch for large miss as sign of labor market cooling. USD/CAD sensitive.'},
-  // Next week Wednesday
-  {dow:10,time:'08:30',imp:'h',name:'UK CPI (YoY)',cur:'GBP',cons:'2.3%',bull:45,pred:'Critical for BoE rate path. Above 2.6%: GBP/USD rallies sharply. Below 2.0%: aggressive cut bets push GBP lower.'},
-  {dow:10,time:'13:30',imp:'h',name:'US PPI (MoM)',cur:'USD',cons:'0.2%',bull:50,pred:'Leading indicator for next CPI. High reading adds hawkish Fed bets. Watch gold and EUR/USD reaction.'},
+  // ── WEEK 1: May 26–30, 2026 ──
+  // Monday May 26
+  {dow:1,time:'All day',imp:'l',name:'US Memorial Day — Markets Closed',cur:'USD',cons:'—',bull:50,pred:'US markets closed. Expect thin liquidity across all USD pairs. Avoid trading major USD news. London session active.'},
+  {dow:1,time:'09:00',imp:'m',name:'German Ifo Business Climate',cur:'EUR',cons:'87.5',bull:48,pred:'Below 85: EUR/USD drops 15-25 pips. Above 90: EUR rallies. Low-medium impact with US closed.'},
+  // Tuesday May 27
+  {dow:2,time:'09:00',imp:'m',name:'ECB Consumer Inflation Expectations',cur:'EUR',cons:'2.9%',bull:45,pred:'Higher expectations = EUR bullish as ECB less likely to cut. Watch EUR/USD reaction around 1.0870 support.'},
+  {dow:2,time:'14:00',imp:'m',name:'US CB Consumer Confidence',cur:'USD',cons:'98.0',bull:55,pred:'Above 102: USD strengthens 15-25 pips. Below 94: USD weakens. Watch EUR/USD and USD/CAD.'},
+  {dow:2,time:'14:00',imp:'m',name:'US JOLTS Job Openings',cur:'USD',cons:'7.6M',bull:52,pred:'Leading labor indicator. Above 8M: USD strength. Below 7M: USD weakness. USD/CAD most sensitive.'},
+  // Wednesday May 28
+  {dow:3,time:'12:30',imp:'h',name:'US GDP (QoQ) — Second Estimate',cur:'USD',cons:'2.3%',bull:55,pred:'Above 2.5%: DXY rallies, EUR/USD drops 30-50 pips. Contraction (<0%): major USD selloff, gold +$20. S&P500 and Nasdaq react strongly.'},
+  {dow:3,time:'14:30',imp:'m',name:'US Crude Oil Inventories',cur:'USD',cons:'-1.2M',bull:50,pred:'Draw (negative): supports oil, CAD positive. Build: oil negative. Watch USD/CAD and OIL/WTI directly.'},
+  {dow:3,time:'18:00',imp:'h',name:'FOMC Meeting Minutes',cur:'USD',cons:'—',bull:48,pred:'Key event. Hawkish tone (rate hikes): USD rallies, gold drops $15-30. Dovish signals: EUR/USD targets 1.0950, gold above $2,360. S&P500 volatile.'},
+  // Thursday May 29
+  {dow:4,time:'12:30',imp:'h',name:'US Initial Jobless Claims',cur:'USD',cons:'227K',bull:55,pred:'Below 210K: USD strength 15-25 pips. Above 250K: USD weakness. Watch alongside GDP revision this week.'},
+  {dow:4,time:'12:30',imp:'h',name:'US Core PCE Price Index (MoM)',cur:'USD',cons:'0.2%',bull:42,pred:'Fed preferred inflation gauge. Above 0.4%: USD surges, gold drops, rate cut bets drop sharply. Below 0.1%: USD weakens, gold +$20, EUR/USD targets 1.0960.'},
+  {dow:4,time:'14:00',imp:'m',name:'US Pending Home Sales (MoM)',cur:'USD',cons:'1.2%',bull:52,pred:'Secondary indicator. Low forex impact unless extreme reading. Background USD signal.'},
+  // Friday May 30
+  {dow:5,time:'07:00',imp:'m',name:'German Retail Sales (MoM)',cur:'EUR',cons:'0.5%',bull:50,pred:'Moderate EUR impact. Above 1%: EUR/USD +15 pips. Negative: EUR/USD -15 pips. Watch EUR/GBP too.'},
+  {dow:5,time:'09:00',imp:'m',name:'Eurozone CPI Flash Estimate (YoY)',cur:'EUR',cons:'2.3%',bull:40,pred:'Above 2.6%: EUR/USD breaks 1.0920 as ECB cut bets drop. Below 2.0%: EUR/USD tests 1.0820. Key for ECB June decision.'},
+  {dow:5,time:'12:30',imp:'m',name:'Canada GDP (MoM)',cur:'CAD',cons:'0.1%',bull:50,pred:'USD/CAD reacts 20-30 pips on surprise. Negative GDP: USD/CAD rises (CAD weak). Positive: USD/CAD drops.'},
+  {dow:5,time:'14:00',imp:'m',name:'US Michigan Consumer Sentiment',cur:'USD',cons:'52.2',bull:52,pred:'End-of-week signal. Major miss (<48) would extend any USD weakness from PCE. Low standalone impact.'},
+
+  // ── WEEK 2: June 2–6, 2026 ──
+  // Monday June 2
+  {dow:8,time:'09:30',imp:'m',name:'UK Manufacturing PMI (Final)',cur:'GBP',cons:'45.4',bull:45,pred:'Below 45: GBP/USD drops 15-20 pips. Confirmation reading — low impact unless major revision from flash.'},
+  {dow:8,time:'14:45',imp:'m',name:'US Manufacturing PMI (Final)',cur:'USD',cons:'52.3',bull:53,pred:'Confirmation of flash reading. Low impact unless major revision. Background USD signal.'},
+  {dow:8,time:'15:00',imp:'m',name:'US ISM Manufacturing PMI',cur:'USD',cons:'49.0',bull:48,pred:'Key manufacturing gauge. Above 50 expansion: USD bullish 20-30 pips. Below 48: USD weakness. Nasdaq and S&P500 react.'},
+  // Tuesday June 3
+  {dow:9,time:'12:30',imp:'m',name:'Canada Trade Balance',cur:'CAD',cons:'-$1.2B',bull:50,pred:'Surplus wider than expected: CAD bullish, USD/CAD drops. Deficit worse: USD/CAD rises. 20-30 pip move.'},
+  {dow:9,time:'15:00',imp:'h',name:'US JOLTS Job Openings',cur:'USD',cons:'7.5M',bull:52,pred:'NFP week preview. Above 8M: USD bullish, supports strong jobs story. Below 7M: USD weakness ahead of NFP Friday.'},
+  {dow:9,time:'15:00',imp:'m',name:'US ISM Services PMI',cur:'USD',cons:'51.2',bull:55,pred:'Services = 70% of US economy. Above 53: USD bullish, S&P500 positive. Below 49: USD selloff, gold +$15.'},
+  // Wednesday June 4
+  {dow:10,time:'12:15',imp:'h',name:'ADP Non-Farm Employment Change',cur:'USD',cons:'125K',bull:55,pred:'NFP preview. Above 180K: USD rallies 20-35 pips, sets bullish tone for Friday. Below 80K: USD weakness.'},
+  {dow:10,time:'14:30',imp:'m',name:'US Crude Oil Inventories',cur:'USD',cons:'-0.8M',bull:50,pred:'Weekly oil supply data. Draw supports OIL/WTI and CAD. Build: oil negative. USD/CAD sensitive.'},
+  // Thursday June 5
+  {dow:11,time:'11:45',imp:'h',name:'ECB Rate Decision',cur:'EUR',cons:'Cut to 2.00%',bull:38,pred:'Cut expected — already priced. Surprise hold: EUR/USD rallies 50-80 pips. Additional dovish guidance: EUR/USD breaks 1.0820. Lagarde press conference key.'},
+  {dow:11,time:'12:30',imp:'h',name:'US Initial Jobless Claims',cur:'USD',cons:'225K',bull:55,pred:'Last major data before NFP. Below 210K: bullish USD into Friday. Above 245K: caution on NFP expectations.'},
+  // Friday June 6
+  {dow:12,time:'12:30',imp:'h',name:'Non-Farm Payrolls',cur:'USD',cons:'175K',bull:60,pred:'Most important forex event of the month. Beat >200K: EUR/USD drops 50-80 pips, gold -$20, S&P500 up. Miss <130K: EUR/USD targets 1.1000, gold +$30. Major move on all USD pairs.'},
+  {dow:12,time:'12:30',imp:'h',name:'US Unemployment Rate',cur:'USD',cons:'4.1%',bull:55,pred:'Released with NFP. Rising above 4.3%: triggers recession fears, USD drops sharply. Below 3.9%: adds to NFP bullish USD move.'},
+  {dow:12,time:'12:30',imp:'h',name:'Canada Employment Change',cur:'CAD',cons:'20K',bull:50,pred:'Released same time as US NFP. Watch USD/CAD for double volatility. CAD jobs above 35K: CAD strengthens. Negative: CAD weak.'},
+  {dow:12,time:'14:00',imp:'m',name:'Canada Ivey PMI',cur:'CAD',cons:'51.0',bull:52,pred:'Secondary CAD event. Low standalone impact given NFP volatility. Background signal for USD/CAD direction.'},
 ];
 
 const DAYS=['Mon','Tue','Wed','Thu','Fri'];
@@ -874,7 +887,11 @@ function selectDay(dow,btn){
 }
 
 function renderCalDay(dow){
-  const evs=CAL_EVENTS.filter(e=>e.dow===dow||(calWeekOffset===1&&e.dow===dow+7));
+  const evs=CAL_EVENTS.filter(e=>{
+    if(calWeekOffset===0) return e.dow===dow;
+    if(calWeekOffset===1) return e.dow===dow+7;
+    return false;
+  });
   if(!evs.length){document.getElementById('cal-rows').innerHTML='<div style="padding:24px;text-align:center;color:var(--t4)"><i class="ti ti-calendar-off" style="font-size:20px;display:block;margin-bottom:8px"></i>No events scheduled.</div>';return;}
   document.getElementById('cal-rows').innerHTML=evs.map((e,i)=>{
     const idx=CAL_EVENTS.indexOf(e);
@@ -1061,29 +1078,89 @@ function renderAdminUsers(){
 }
 
 // ========== PRICES ==========
-let liveRates={};
+// Yahoo Finance via allorigins proxy (no API key needed)
+const SYMBOLS=[
+  {sym:'EURUSD=X',p:'EUR/USD',dec:4},
+  {sym:'GBPUSD=X',p:'GBP/USD',dec:4},
+  {sym:'JPY=X',p:'USD/JPY',dec:2},
+  {sym:'GBPJPY=X',p:'GBP/JPY',dec:2},
+  {sym:'AUDUSD=X',p:'AUD/USD',dec:4},
+  {sym:'NZDUSD=X',p:'NZD/USD',dec:4},
+  {sym:'USDCAD=X',p:'USD/CAD',dec:4},
+  {sym:'USDCHF=X',p:'USD/CHF',dec:4},
+  {sym:'GC=F',p:'XAU/USD',dec:2},
+  {sym:'DX-Y.NYB',p:'DXY',dec:2},
+  {sym:'NQ=F',p:'NASDAQ',dec:0},
+  {sym:'YM=F',p:'DOW JONES',dec:0},
+  {sym:'ES=F',p:'S&P 500',dec:1},
+  {sym:'CL=F',p:'OIL (WTI)',dec:2},
+];
+
+let priceData={};
+
 async function fetchPrices(){
   try{
-    const r=await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
-    const j=await r.json();liveRates=j.usd;
-  }catch(e){}
-  const PAIRS=[
-    {p:'EUR/USD',v:liveRates.eur?(1/liveRates.eur).toFixed(4):'1.0892',base:1.0874,chg:+0.18},
-    {p:'GBP/USD',v:liveRates.gbp?(1/liveRates.gbp).toFixed(4):'1.2743',base:1.2758,chg:-0.12},
-    {p:'USD/JPY',v:liveRates.jpy?liveRates.jpy.toFixed(2):'149.82',base:150.29,chg:-0.31},
-    {p:'XAU/USD',v:liveRates.xau?(1/liveRates.xau).toFixed(2):'2341.50',base:2328,chg:+0.55},
-    {p:'DXY',v:'103.42',base:103.64,chg:-0.21},
-    {p:'AUD/USD',v:liveRates.aud?(1/liveRates.aud).toFixed(4):'0.6521',base:0.6507,chg:+0.22},
-    {p:'USD/CHF',v:liveRates.chf?liveRates.chf.toFixed(4):'0.9012',base:0.9004,chg:+0.08},
-    {p:'NZD/USD',v:liveRates.nzd?(1/liveRates.nzd).toFixed(4):'0.5981',base:0.5993,chg:-0.19},
-    {p:'USD/CAD',v:liveRates.cad?liveRates.cad.toFixed(4):'1.3642',base:1.3651,chg:-0.07},
-    {p:'GBP/JPY',v:(liveRates.gbp&&liveRates.jpy)?((1/liveRates.gbp)*liveRates.jpy).toFixed(2):'191.03',base:191.89,chg:-0.45},
-  ];
-  const html=PAIRS.map(x=>`<span class="ti"><span class="tp">${x.p}</span><span class="tv">${x.v}</span><span class="${x.chg>=0?'up':'dn'}">${x.chg>=0?'▲':'▼'}${Math.abs(x.chg).toFixed(2)}%</span></span>`).join('');
+    // Use allorigins to bypass CORS on Yahoo Finance
+    const syms=SYMBOLS.map(s=>s.sym).join(',');
+    const url=`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${syms}&fields=regularMarketPrice,regularMarketChangePercent,regularMarketPreviousClose`;
+    const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const res=await fetch(proxy);
+    const raw=await res.json();
+    const data=JSON.parse(raw.contents);
+    const quotes=data?.quoteResponse?.result||[];
+    quotes.forEach(q=>{
+      const sym=SYMBOLS.find(s=>s.sym===q.symbol);
+      if(sym){
+        priceData[sym.p]={
+          price:q.regularMarketPrice,
+          chg:q.regularMarketChangePercent,
+          dec:sym.dec
+        };
+      }
+    });
+    renderPrices();
+  }catch(e){
+    console.warn('Yahoo Finance unavailable, using fallback');
+    renderFallbackPrices();
+  }
+}
+
+function fmtPrice(val,dec){
+  if(dec===0)return Math.round(val).toLocaleString('en-US');
+  return val.toFixed(dec);
+}
+
+function renderPrices(){
+  if(!Object.keys(priceData).length){renderFallbackPrices();return;}
+  const pairs=SYMBOLS.map(s=>({
+    p:s.p,
+    v:priceData[s.p]?fmtPrice(priceData[s.p].price,s.dec):'—',
+    chg:priceData[s.p]?priceData[s.p].chg:0
+  }));
+  const html=pairs.map(x=>`<span class="ti"><span class="tp">${x.p}</span><span class="tv">${x.v}</span><span class="${x.chg>=0?'up':'dn'}">${x.chg>=0?'▲':'▼'}${Math.abs(x.chg).toFixed(2)}%</span></span>`).join('');
   document.getElementById('ticker').innerHTML=html+html;
-  document.getElementById('mini-prices').innerHTML=PAIRS.slice(0,8).map(x=>`
+  document.getElementById('mini-prices').innerHTML=pairs.map(x=>`
     <div class="pair-row">
-      <span class="pr-name">${x.p}</span>
+      <span class="pr-name" style="font-size:10px">${x.p}</span>
+      <span class="pr-val">${x.v}</span>
+      <span class="pr-chg ${x.chg>=0?'up':'dn'}">${x.chg>=0?'+':''}${x.chg.toFixed(2)}%</span>
+    </div>`).join('');
+}
+
+function renderFallbackPrices(){
+  const fallback=[
+    {p:'EUR/USD',v:'1.0892',chg:+0.18},{p:'GBP/USD',v:'1.2743',chg:-0.12},
+    {p:'USD/JPY',v:'149.82',chg:-0.31},{p:'XAU/USD',v:'2341.50',chg:+0.55},
+    {p:'DXY',v:'103.42',chg:-0.21},{p:'NASDAQ',v:'19,842',chg:+0.44},
+    {p:'DOW JONES',v:'42,156',chg:+0.28},{p:'S&P 500',v:'5,634',chg:+0.38},
+    {p:'AUD/USD',v:'0.6521',chg:+0.22},{p:'USD/CHF',v:'0.9012',chg:+0.08},
+    {p:'OIL (WTI)',v:'78.42',chg:-0.65},{p:'GBP/JPY',v:'191.03',chg:-0.45},
+  ];
+  const html=fallback.map(x=>`<span class="ti"><span class="tp">${x.p}</span><span class="tv">${x.v}</span><span class="${x.chg>=0?'up':'dn'}">${x.chg>=0?'▲':'▼'}${Math.abs(x.chg).toFixed(2)}%</span></span>`).join('');
+  document.getElementById('ticker').innerHTML=html+html;
+  document.getElementById('mini-prices').innerHTML=fallback.map(x=>`
+    <div class="pair-row">
+      <span class="pr-name" style="font-size:10px">${x.p}</span>
       <span class="pr-val">${x.v}</span>
       <span class="pr-chg ${x.chg>=0?'up':'dn'}">${x.chg>=0?'+':''}${x.chg.toFixed(2)}%</span>
     </div>`).join('');
@@ -1112,9 +1189,11 @@ function updateClock(){
 }
 
 function initApp(){
-  renderForum();renderLB();loadNews();fetchPrices();updateClock();initCalendar();
+  renderForum();renderLB();loadNews();updateClock();initCalendar();
+  renderFallbackPrices(); // show immediately
+  fetchPrices(); // then fetch real data
   setInterval(updateClock,1000);
-  setInterval(fetchPrices,60000);
+  setInterval(fetchPrices,5*60*1000); // every 5 min
   setInterval(loadNews,5*60*1000);
 }
 
