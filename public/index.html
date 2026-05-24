@@ -328,7 +328,7 @@ body{overflow:hidden;}
       <div class="live-dot"></div>
       <span class="clock-lbl" id="clock">--:--</span>
       <span class="clock-lbl" id="today-lbl" style="color:var(--warn)"></span>
-      <div class="user-pill" id="user-pill" onclick="openPrf(currentUser)">
+      <div class="user-pill" id="user-pill" onclick="openPrf(currentUser||{})">
         <div class="u-av" id="u-av" style="background:#1e293b;color:#64748b;width:22px;height:22px;font-size:9px">?</div>
         <span class="u-name" id="u-name">...</span>
       </div>
@@ -613,6 +613,11 @@ const DEMO_PROFILES=[
 function msince(d){const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];try{const dt=new Date(d);return months[dt.getMonth()]+' '+dt.getFullYear();}catch{return d;}}
 function mtenure(d){try{const diff=Date.now()-new Date(d).getTime();const days=Math.floor(diff/86400000);if(days<30)return days+'d on platform';if(days<365)return Math.floor(days/30)+'m on platform';const y=Math.floor(days/365);const m=Math.floor((days%365)/30);return y+'y '+(m>0?m+'m ':'')+' on platform';}catch{return '';}}
 
+
+function openPrfByUsername(username){
+  const p=DEMO_PROFILES.find(x=>x.username===username);
+  if(p)openPrf({name:p.name,username:p.username,bg:p.bg,tc:p.tc,initials:p.initials,role:p.role.replace('r-',''),rl:p.rl});
+}
 function openPrf(u){
   if(!u)return;
   const p=DEMO_PROFILES.find(x=>x.username===(u.username||''))||{
@@ -666,7 +671,7 @@ async function callAI(messages,onDone){
     const system=SYS+(langNote?' '+langNote:'');
     const contents=messages.filter(m=>['user','assistant'].includes(m.role)&&typeof m.content==='string').slice(-20).map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
     if(!contents.length){onDone('No messages to process.');return;}
-    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=AIzaSyAf5HYv78O6J4seiZ_V41tDWy5aNE9aUIs',{
+    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyAf5HYv78O6J4seiZ_V41tDWy5aNE9aUIs',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({system_instruction:{parts:[{text:system}]},contents,generationConfig:{maxOutputTokens:1000,temperature:0.7}})
     });
@@ -826,7 +831,6 @@ const CAL_EVENTS=[
 ];
 
 const DAYS=['Mon','Tue','Wed','Thu','Fri'];
-let calActiveDay=null;
 
 function getMon(offset){const n=new Date();const d=n.getDay();const diff=d===0?-6:1-d;const m=new Date(n);m.setDate(n.getDate()+diff+offset*7);m.setHours(0,0,0,0);return m;}
 
@@ -909,7 +913,7 @@ const SEED_POSTS=[
 function renderForum(){
   const all=[...userPosts,...SEED_POSTS];
   const tagMap={'t-a':'t-a','t-s':'t-s','t-d':'t-d','t-n':'t-n'};
-  document.getElementById('forum-feed').innerHTML=all.map(t=>`
+  document.getElementById('forum-feed').innerHTML=all.map((t,idx)=>`
     <div class="forum-thread">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:7px;margin-bottom:6px">
         <div style="font-size:12px;font-weight:600;color:var(--t1);line-height:1.4;flex:1">${t.title}</div>
@@ -917,8 +921,8 @@ function renderForum(){
       </div>
       <div style="font-size:11px;color:var(--t3);line-height:1.6;margin-bottom:8px">${t.body}</div>
       <div style="display:flex;align-items:center;gap:6px">
-        <div class="av" style="width:20px;height:20px;background:${t.bg};color:${t.tc};font-size:8px;cursor:pointer" onclick="openPrf({name:'${t.name}',username:'${t.username}',bg:'${t.bg}',tc:'${t.tc}',initials:'${t.i}',role:'${t.role.replace('r-','')}'||'standard',rl:'${t.rl}'})">${t.i}</div>
-        <span style="font-size:11px;color:var(--t2);cursor:pointer" onclick="openPrf({name:'${t.name}',username:'${t.username}',bg:'${t.bg}',tc:'${t.tc}',initials:'${t.i}',role:'${t.role.replace('r-','')||'standard'}',rl:'${t.rl}'})">${t.name}</span>
+        <div class="av" style="width:20px;height:20px;background:${t.bg};color:${t.tc};font-size:8px;cursor:pointer" data-idx="${idx}" onclick="openPrfByIdx(this.dataset.idx,'forum')">${t.i}</div>
+        <span style="font-size:11px;color:var(--t2);cursor:pointer" data-idx="${idx}" onclick="openPrfByIdx(this.dataset.idx,'forum')">${t.name}</span>
         <span class="role-b ${t.role}">${t.rl}</span>
         <div style="margin-left:auto;display:flex;gap:8px">
           <span style="font-size:10px;color:var(--t4)"><i class="ti ti-heart" style="font-size:11px"></i> ${t.likes||0}</span>
@@ -927,6 +931,13 @@ function renderForum(){
         </div>
       </div>
     </div>`).join('');
+}
+
+function openPrfByIdx(idx,source){
+  const all=[...userPosts,...SEED_POSTS];
+  const t=all[parseInt(idx)];
+  if(!t)return;
+  openPrf({name:t.name,username:t.username,bg:t.bg,tc:t.tc,initials:t.i,role:t.role.replace('r-',''),rl:t.rl});
 }
 
 function submitPost(){
@@ -969,7 +980,7 @@ function renderLB(){
   const sorted=[...TRADERS].sort((a,b)=>b[k]-a[k]);
   document.getElementById('lb-rows').innerHTML=sorted.map((t,i)=>{
     const chg=t[ck];const up=chg.startsWith('+');
-    return`<div class="lb-row ${TOP_CLS[i]||''}" onclick="openPrf({name:'${t.name}',username:'${t.username}',bg:'${t.bg}',tc:'${t.tc}',initials:'${t.i}',role:'${t.role.replace('r-','')}',rl:'${t.rl}'})">
+    return`<div class="lb-row ${TOP_CLS[i]||''}" data-uname="${t.username}" onclick="openPrfByUsername(this.dataset.uname)">
       <div style="font-size:12px;font-weight:700;color:${RANK_COLORS[i]||'var(--t4)'};text-align:center">${i+1}</div>
       <div class="av" style="width:28px;height:28px;background:${t.bg};color:${t.tc};font-size:10px">${t.i}</div>
       <div style="min-width:0"><div style="font-size:12px;font-weight:600;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.name} <span class="role-b ${t.role}">${t.rl}</span></div><div style="font-size:10px;color:var(--t4)">${t.username}</div></div>
@@ -1042,7 +1053,7 @@ function renderAdminUsers(){
   const el=document.getElementById('admin-users');if(!el)return;
   const users=[...DEMO_PROFILES];
   el.innerHTML=users.map(u=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr);cursor:pointer" onclick="openPrf({name:'${u.name}',username:'${u.username}',bg:'${u.bg}',tc:'${u.tc}',initials:'${u.initials}',role:'${u.role.replace('r-','')}',rl:'${u.rl}'})">
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr);cursor:pointer" data-uname="${u.username}" onclick="openPrfByUsername(this.dataset.uname)">
       <div class="av" style="width:26px;height:26px;background:${u.bg};color:${u.tc};font-size:9px">${u.initials}</div>
       <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:var(--t1)">${u.name}</div><div style="font-size:10px;color:var(--t4)">${u.username} · ${u.since}</div></div>
       <span class="role-b ${u.role}">${u.rl}</span>
