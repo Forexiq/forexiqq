@@ -563,7 +563,7 @@ function showAuthError(type,msg){
   setTimeout(()=>el.style.display='none',4000);
 }
 
-function doRegister(){
+async function doRegister(){
   const name=document.getElementById('reg-name').value.trim();
   const username=document.getElementById('reg-username').value.trim();
   const email=document.getElementById('reg-email').value.trim();
@@ -571,41 +571,74 @@ function doRegister(){
   const country=document.getElementById('reg-country').value;
   if(!name||!username||!email||!pass||!country){showAuthError('user','Please fill in all fields.');return;}
   if(pass.length<8){showAuthError('user','Password must be at least 8 characters.');return;}
-  if(registeredUsers.find(u=>u.email===email)){showAuthError('user','This email is already registered.');return;}
-  const user={name,username:username.startsWith('@')?username:'@'+username,email,country,role:'r-standard',rl:'Standard',bg:'#1e293b',tc:'#64748b',initials:name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(),registeredAt:new Date(),payout:0,posts:0,likes:0,isAdmin:false};
-  registeredUsers.push(user);
-  loginUser(user);
+  try{
+    const res=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,username,email,password:pass,country})});
+    const data=await res.json();
+    if(!res.ok){showAuthError('user',data.error||'Error creating account.');return;}
+    localStorage.setItem('forexiq_token',data.token);
+    localStorage.setItem('forexiq_user',JSON.stringify(data.user));
+    loginUser(data.user);
+  }catch(e){showAuthError('user','Connection error. Please try again.');}
 }
 
-function doLogin(){
+async function doLogin(){
   const email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-pass').value;
   if(!email||!pass){showAuthError('user','Please enter your email and password.');return;}
-  const user=registeredUsers.find(u=>u.email===email);
-  if(!user){showAuthError('user','No account found with this email.');return;}
-  loginUser(user);
+  try{
+    const res=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const data=await res.json();
+    if(!res.ok){showAuthError('user',data.error||'Invalid credentials.');return;}
+    localStorage.setItem('forexiq_token',data.token);
+    localStorage.setItem('forexiq_user',JSON.stringify(data.user));
+    loginUser(data.user);
+  }catch(e){showAuthError('user','Connection error. Please try again.');}
 }
 
-function doAdminLogin(){
+async function doAdminLogin(){
   const email=document.getElementById('admin-email').value.trim();
   const pass=document.getElementById('admin-pass').value;
   const key=document.getElementById('admin-key').value;
   if(!email||!pass||!key){showAuthError('admin','Please fill all admin credentials.');return;}
-  if(key!==ADMIN_KEY){showAuthError('admin','Invalid admin key.');return;}
-  const adminUser={name:'Admin',username:'@admin',email,country:'—',role:'r-elite',rl:'Admin',bg:'#2a0f0f',tc:'#f87171',initials:'AD',registeredAt:new Date(Date.now()-365*24*3600*1000),payout:0,posts:0,likes:0,isAdmin:true};
-  loginUser(adminUser);
+  try{
+    const res=await fetch('/api/auth/admin-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass,adminKey:key})});
+    const data=await res.json();
+    if(!res.ok){showAuthError('admin',data.error||'Invalid credentials.');return;}
+    localStorage.setItem('forexiq_token',data.token);
+    localStorage.setItem('forexiq_user',JSON.stringify(data.user));
+    loginUser(data.user);
+  }catch(e){showAuthError('admin','Connection error. Please try again.');}
 }
 
 function loginUser(user){
   currentUser=user;
+  const initials=user.initials||user.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
+  const bg=user.avatar_color||user.bg||'#1e293b';
+  const tc=user.avatar_text_color||user.tc||'#64748b';
   document.querySelectorAll('.auth-screen').forEach(s=>s.classList.add('hidden'));
   document.getElementById('main-app').style.display='grid';
   const av=document.getElementById('user-av-hdr');
-  av.textContent=user.initials;av.style.background=user.bg;av.style.color=user.tc;
-  document.getElementById('user-name-hdr').textContent=user.username;
-  if(user.isAdmin)document.getElementById('nav-admin').style.display='flex';
+  av.textContent=initials;av.style.background=bg;av.style.color=tc;
+  document.getElementById('user-name-hdr').textContent=user.username||user.name;
+  if(user.is_admin||user.isAdmin)document.getElementById('nav-admin').style.display='flex';
   renderAdminUsers();
   initApp();
+}
+
+function checkSavedSession(){
+  const token=localStorage.getItem('forexiq_token');
+  const userStr=localStorage.getItem('forexiq_user');
+  if(token&&userStr){
+    try{
+      const user=JSON.parse(userStr);
+      loginUser(user);
+      return true;
+    }catch(e){
+      localStorage.removeItem('forexiq_token');
+      localStorage.removeItem('forexiq_user');
+    }
+  }
+  return false;
 }
 
 function initApp(){
@@ -614,6 +647,12 @@ function initApp(){
   setInterval(updateClock,1000);
   setInterval(fetchPrices,60000);
   setInterval(loadNews,5*60*1000);
+}
+
+function logout(){
+  localStorage.removeItem('forexiq_token');
+  localStorage.removeItem('forexiq_user');
+  location.reload();
 }
 
 // ==================== PROFILE ====================
@@ -1110,6 +1149,7 @@ function updateClock(){
   const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   document.getElementById('today-label').textContent=days[n.getDay()]+', '+months[n.getMonth()]+' '+n.getDate();
 }
+if(!checkSavedSession()){}
 </script>
 </body>
 </html>
