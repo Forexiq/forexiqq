@@ -669,7 +669,26 @@ function openProfile(user){
 function closeProfile(){document.getElementById('profile-modal').classList.add('hidden');}
 
 // ==================== AI ====================
-async function callAI(messages,onDone){
+async function callAI(messages, onDone){
+  try{
+    const token = localStorage.getItem('forexiq_token') || '';
+    const res = await fetch('/api/ai/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        messages,
+        language: document.getElementById('lang-sel')?.value || 'en'
+      })
+    });
+    const data = await res.json();
+    onDone(data.response || 'Error connecting to AI.');
+  } catch(e) {
+    onDone('Connection error. Please try again.');
+  }
+}
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,system:SYS,messages})});
     const d=await res.json();
