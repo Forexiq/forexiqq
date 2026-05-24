@@ -1078,74 +1078,90 @@ function renderAdminUsers(){
 }
 
 // ========== PRICES ==========
-// Multi-source live prices: forex via fawazahmed0 CDN + indices simulated with micro-noise
-let liveRates={};
-let priceTimestamp=null;
+// TwelveData API — real-time forex + indices (free tier 800 calls/day)
+const TD_KEY='08e088a72f384459ae30983649188a2c';
+const TD_SYMBOLS=[
+  {sym:'EUR/USD',label:'EUR/USD',dec:4,type:'forex'},
+  {sym:'GBP/USD',label:'GBP/USD',dec:4,type:'forex'},
+  {sym:'USD/JPY',label:'USD/JPY',dec:2,type:'forex'},
+  {sym:'XAU/USD',label:'XAU/USD',dec:2,type:'forex'},
+  {sym:'GBP/JPY',label:'GBP/JPY',dec:2,type:'forex'},
+  {sym:'AUD/USD',label:'AUD/USD',dec:4,type:'forex'},
+  {sym:'USD/CHF',label:'USD/CHF',dec:4,type:'forex'},
+  {sym:'NZD/USD',label:'NZD/USD',dec:4,type:'forex'},
+  {sym:'USD/CAD',label:'USD/CAD',dec:4,type:'forex'},
+  {sym:'IXIC',label:'NASDAQ',dec:0,type:'index'},
+  {sym:'DJI',label:'DOW JONES',dec:0,type:'index'},
+  {sym:'SPX',label:'S&P 500',dec:1,type:'index'},
+  {sym:'USOIL',label:'OIL (WTI)',dec:2,type:'commodity'},
+  {sym:'DX-Y.NYB',label:'DXY',dec:2,type:'index'},
+];
 
-// Base values updated May 2026
-const BASE_PRICES={
-  'EUR/USD':{v:1.0892,dec:4},'GBP/USD':{v:1.2743,dec:4},
-  'USD/JPY':{v:149.82,dec:2},'XAU/USD':{v:2341.50,dec:2},
-  'DXY':{v:103.42,dec:2},'AUD/USD':{v:0.6521,dec:4},
-  'USD/CHF':{v:0.9012,dec:4},'NZD/USD':{v:0.5981,dec:4},
-  'USD/CAD':{v:1.3642,dec:4},'GBP/JPY':{v:191.03,dec:2},
-  'NASDAQ':{v:19842,dec:0},'DOW JONES':{v:42156,dec:0},
-  'S&P 500':{v:5634,dec:1},'OIL (WTI)':{v:78.42,dec:2},
-};
+let tdPrices={};
+let tdPrevPrices={};
+let tdLastFetch=null;
 
-const PAIR_ORDER=['EUR/USD','GBP/USD','USD/JPY','XAU/USD','DXY','NASDAQ','DOW JONES','S&P 500','AUD/USD','USD/CHF','OIL (WTI)','GBP/JPY','NZD/USD','USD/CAD'];
-
-// Micro-noise to simulate live movement
-function addNoise(val,dec){
-  const spread=val*0.0002;
-  const noise=(Math.random()-0.5)*spread*2;
-  return parseFloat((val+noise).toFixed(dec));
-}
-
-function fmtVal(val,dec){
+function fmtTD(val,dec){
+  if(!val||isNaN(val))return'—';
   if(dec===0)return Math.round(val).toLocaleString('en-US');
-  return val.toFixed(dec);
+  return parseFloat(val).toFixed(dec);
 }
 
 async function fetchPrices(){
   try{
-    // fawazahmed0 via jsdelivr CDN — has CORS headers, works from browser
-    const res=await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
-    if(!res.ok)throw new Error('API error');
-    const j=await res.json();
-    const r=j.usd;
-    if(r.eur) BASE_PRICES['EUR/USD'].v=parseFloat((1/r.eur).toFixed(4));
-    if(r.gbp) BASE_PRICES['GBP/USD'].v=parseFloat((1/r.gbp).toFixed(4));
-    if(r.jpy) BASE_PRICES['USD/JPY'].v=parseFloat(r.jpy.toFixed(2));
-    if(r.xau) BASE_PRICES['XAU/USD'].v=parseFloat((1/r.xau).toFixed(2));
-    if(r.chf) BASE_PRICES['USD/CHF'].v=parseFloat(r.chf.toFixed(4));
-    if(r.aud) BASE_PRICES['AUD/USD'].v=parseFloat((1/r.aud).toFixed(4));
-    if(r.nzd) BASE_PRICES['NZD/USD'].v=parseFloat((1/r.nzd).toFixed(4));
-    if(r.cad) BASE_PRICES['USD/CAD'].v=parseFloat(r.cad.toFixed(4));
-    if(r.gbp&&r.jpy) BASE_PRICES['GBP/JPY'].v=parseFloat(((1/r.gbp)*r.jpy).toFixed(2));
-    priceTimestamp=new Date();
+    // TwelveData supports CORS from browser
+    const syms=TD_SYMBOLS.map(s=>s.sym).join(',');
+    const url=`https://api.twelvedata.com/price?symbol=${encodeURIComponent(syms)}&apikey=${TD_KEY}`;
+    const res=await fetch(url);
+    if(!res.ok)throw new Error('TwelveData error: '+res.status);
+    const data=await res.json();
+
+    // Also fetch previous close for % change
+    const url2=`https://api.twelvedata.com/eod?symbol=${encodeURIComponent(syms)}&apikey=${TD_KEY}`;
+    const res2=await fetch(url2);
+    const prev=await res2.json();
+
+    tdPrevPrices={};
+    if(prev&&typeof prev==='object'){
+      TD_SYMBOLS.forEach(s=>{
+        const key=s.sym;
+        if(prev[key]?.close) tdPrevPrices[s.label]=parseFloat(prev[key].close);
+        else if(prev.close) tdPrevPrices[s.label]=parseFloat(prev.close);
+      });
+    }
+
+    tdPrices={};
+    if(data&&typeof data==='object'){
+      TD_SYMBOLS.forEach(s=>{
+        const key=s.sym;
+        // TwelveData returns object per symbol when multiple requested
+        const price=data[key]?.price||data.price;
+        if(price) tdPrices[s.label]=parseFloat(price);
+      });
+    }
+
+    tdLastFetch=new Date();
+    renderPrices();
   }catch(e){
-    console.warn('Price API unavailable, using simulated prices');
+    console.warn('TwelveData unavailable:',e.message);
+    renderFallbackPrices();
   }
-  renderPrices();
 }
 
-// Daily change simulation based on typical daily ranges
-const DAY_CHANGES={
-  'EUR/USD':+0.18,'GBP/USD':-0.12,'USD/JPY':-0.31,'XAU/USD':+0.55,
-  'DXY':-0.21,'NASDAQ':+0.44,'DOW JONES':+0.28,'S&P 500':+0.38,
-  'AUD/USD':+0.22,'USD/CHF':+0.08,'OIL (WTI)':-0.65,'GBP/JPY':-0.45,
-  'NZD/USD':-0.19,'USD/CAD':-0.07
-};
+function calcChg(label,currentPrice){
+  const prev=tdPrevPrices[label];
+  if(!prev||!currentPrice)return 0;
+  return((currentPrice-prev)/prev)*100;
+}
 
 function renderPrices(){
-  const pairs=PAIR_ORDER.map(p=>{
-    const base=BASE_PRICES[p];
-    const live=addNoise(base.v,base.dec);
-    const chg=DAY_CHANGES[p]||0;
-    return{p,v:fmtVal(live,base.dec),chg};
+  const pairs=TD_SYMBOLS.map(s=>{
+    const price=tdPrices[s.label];
+    const chg=price?calcChg(s.label,price):FALLBACK_CHG[s.label]||0;
+    const displayPrice=price?fmtTD(price,s.dec):FALLBACK[s.label];
+    return{p:s.label,v:displayPrice||'—',chg};
   });
-  const ts=priceTimestamp?priceTimestamp.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):'--:--';
+  const ts=tdLastFetch?'Live · '+tdLastFetch.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):'Updating...';
   const html=pairs.map(x=>`<span class="ti"><span class="tp">${x.p}</span><span class="tv">${x.v}</span><span class="${x.chg>=0?'up':'dn'}">${x.chg>=0?'▲':'▼'}${Math.abs(x.chg).toFixed(2)}%</span></span>`).join('');
   document.getElementById('ticker').innerHTML=html+html;
   document.getElementById('mini-prices').innerHTML=pairs.map(x=>`
@@ -1154,12 +1170,36 @@ function renderPrices(){
       <span class="pr-val">${x.v}</span>
       <span class="pr-chg ${x.chg>=0?'up':'dn'}">${x.chg>=0?'+':''}${x.chg.toFixed(2)}%</span>
     </div>`).join('');
-  // Update last-updated label
-  const el=document.getElementById('last-update');
-  if(el)el.textContent='Updated '+ts;
 }
 
-function renderFallbackPrices(){renderPrices();}
+// Realistic fallback values (May 2026)
+const FALLBACK={
+  'EUR/USD':'1.0892','GBP/USD':'1.2743','USD/JPY':'149.82',
+  'XAU/USD':'2,341.50','GBP/JPY':'191.03','AUD/USD':'0.6521',
+  'USD/CHF':'0.9012','NZD/USD':'0.5981','USD/CAD':'1.3642',
+  'NASDAQ':'19,842','DOW JONES':'42,156','S&P 500':'5,634.2',
+  'OIL (WTI)':'78.42','DXY':'103.42'
+};
+const FALLBACK_CHG={
+  'EUR/USD':0.18,'GBP/USD':-0.12,'USD/JPY':-0.31,'XAU/USD':0.55,
+  'GBP/JPY':-0.45,'AUD/USD':0.22,'USD/CHF':0.08,'NZD/USD':-0.19,
+  'USD/CAD':-0.07,'NASDAQ':0.44,'DOW JONES':0.28,'S&P 500':0.38,
+  'OIL (WTI)':-0.65,'DXY':-0.21
+};
+
+function renderFallbackPrices(){
+  const pairs=TD_SYMBOLS.map(s=>({
+    p:s.label,v:FALLBACK[s.label]||'—',chg:FALLBACK_CHG[s.label]||0
+  }));
+  const html=pairs.map(x=>`<span class="ti"><span class="tp">${x.p}</span><span class="tv">${x.v}</span><span class="${x.chg>=0?'up':'dn'}">${x.chg>=0?'▲':'▼'}${Math.abs(x.chg).toFixed(2)}%</span></span>`).join('');
+  document.getElementById('ticker').innerHTML=html+html;
+  document.getElementById('mini-prices').innerHTML=pairs.map(x=>`
+    <div class="pair-row">
+      <span class="pr-name" style="font-size:10px">${x.p}</span>
+      <span class="pr-val">${x.v}</span>
+      <span class="pr-chg ${x.chg>=0?'up':'dn'}">${x.chg>=0?'+':''}${x.chg.toFixed(2)}%</span>
+    </div>`).join('');
+}
 
 // ========== VIEWS ==========
 function setView(v,btn){
