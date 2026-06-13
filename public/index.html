@@ -671,13 +671,14 @@ async function callAI(messages,onDone){
     const system=SYS+(langNote?' '+langNote:'');
     const contents=messages.filter(m=>['user','assistant'].includes(m.role)&&typeof m.content==='string').slice(-20).map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
     if(!contents.length){onDone('No messages to process.');return;}
-    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=AIzaSyB7_jzrawGEnDJeM9QFH3PFVRXEWsK7k_s',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({system_instruction:{parts:[{text:system}]},contents,generationConfig:{maxOutputTokens:1000,temperature:0.7}})
-    });
+    const res=await fetch('/api/ai/chat',{
+  method:'POST',
+  headers:{'Content-Type':'application/json','Authorization':'Bearer '+(localStorage.getItem('fiq_token')||'')},
+  body:JSON.stringify({messages:contents.map(c=>({role:c.role==='model'?'assistant':'user',content:c.parts[0].text})),language:lang})
+});
     const d=await res.json();
-    if(!res.ok){console.error('Gemini error:',d);onDone('AI temporarily unavailable. Please try again in a moment.');return;}
-    const text=d?.candidates?.[0]?.content?.parts?.[0]?.text||'Unable to generate response.';
+    if(!res.ok){onDone((await res.json()).error||'AI temporarily unavailable.');return;}
+    const text=(await res.json()).response||'Unable to generate response.';
     onDone(text);
   }catch(e){console.error('AI error:',e);onDone('Connection error. Please try again.');}
 }
