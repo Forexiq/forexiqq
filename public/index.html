@@ -666,21 +666,20 @@ const LANGS={es:'Responde en español.',fr:'Réponds en français.',de:'Antworte
 
 async function callAI(messages,onDone){
   try{
+    const token=localStorage.getItem('fiq_token')||'';
     const lang=document.getElementById('lang-sel')?.value||'en';
-    const langNote=LANGS[lang]||'';
-    const system=SYS+(langNote?' '+langNote:'');
-    const contents=messages.filter(m=>['user','assistant'].includes(m.role)&&typeof m.content==='string').slice(-20).map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
-    if(!contents.length){onDone('No messages to process.');return;}
     const res=await fetch('/api/ai/chat',{
-  method:'POST',
-  headers:{'Content-Type':'application/json','Authorization':'Bearer '+(localStorage.getItem('fiq_token')||'')},
-  body:JSON.stringify({messages:contents.map(c=>({role:c.role==='model'?'assistant':'user',content:c.parts[0].text})),language:lang})
-});
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({messages:messages.slice(-20),language:lang})
+    });
     const d=await res.json();
-    if(!res.ok){onDone((await res.json()).error||'AI temporarily unavailable.');return;}
-    const text=(await res.json()).response||'Unable to generate response.';
-    onDone(text);
-  }catch(e){console.error('AI error:',e);onDone('Connection error. Please try again.');}
+    if(!res.ok){onDone(d.error||'AI temporarily unavailable. Please try again.');return;}
+    onDone(d.response||'Unable to generate response.');
+  }catch(e){
+    console.error('AI error:',e);
+    onDone('Connection error. Please try again.');
+  }
 }
 
 function addMsg(id,role,html){
