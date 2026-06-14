@@ -1,17 +1,13 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/(.*)", "dest": "/public/$1" }
-  ]
+  "name": "forexiq",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo 'No build step needed'"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.0",
+    "@vercel/node": "^3.0.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  }
 }
